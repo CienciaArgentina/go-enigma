@@ -3,6 +3,13 @@
 ## Introduction
 Its main purpose is to provide a service for both authentication and authorization.
 
+## Configuration
+You **must** add the environment variables, either this won't work.
+The variables that the system needs are:
+```shell
+    export DB_PASSWORD value
+    export DB_HOSTNAME value
+```
 
 ## Entities
 
