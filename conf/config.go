@@ -8,19 +8,18 @@ import (
 )
 
 const (
-	SCOPE = "SCOPE"
+	SCOPE         = "SCOPE"
 	GOENVIRONMENT = "GO_ENVIRONMENT"
-	Production = "production"
-	Testing = "testing"
-	Development = "development"
-
+	Production    = "production"
+	Testing       = "testing"
+	Development   = "development"
 )
 
 type Configuration struct {
 	Database struct {
-		User string `yaml:user`
+		User     string `yaml:user`
 		Password string `envconfig:"DB_PASSWORD"`
-		Host string `envconfig:"DB_HOST"`
+		Host     string `envconfig:"DB_HOST"`
 		Database string `yaml:dbname`
 	} `yaml:database`
 }
