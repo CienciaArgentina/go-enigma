@@ -22,31 +22,42 @@ type Configuration struct {
 		Host     string `envconfig:"DB_HOST"`
 		Database string `yaml:dbname`
 	} `yaml:database`
+	Server struct {
+		Port int `yaml:port`
+	} `yaml:server`
 }
 
-func New() (*Configuration, error) {
+func New() *Configuration {
 	config := &Configuration{}
 	scope := os.Getenv(SCOPE)
 	if scope == "" {
 		scope = Development
 	}
 
-	data, err := os.Open(fmt.Sprintf("config.%s.yml", scope))
+	a, _ := os.Getwd()
+	fmt.Print(a)
+	data, err := os.Open(fmt.Sprintf("conf/config.%s.yml", scope))
 	if err != nil {
-		return nil, err
+		// handle error
 	}
 
 	defer data.Close()
 
 	decoder := yaml.NewDecoder(data)
 	if err := decoder.Decode(config); err != nil {
-		return nil, err
+		// handle error
 	}
 
 	err = envconfig.Process("DB", config)
 	if err != nil {
-		return nil, err
+		// handle error
 	}
 
-	return config, nil
+	return config
+}
+
+func ConsolePrintMessageByCienciaArgentina(msg string) {
+	statusColor := "\033[30;45m"
+	resetColor := "\033[0m"
+	fmt.Print(fmt.Sprintf("%s %v %s - %s", statusColor, "Ciencia Argentina", resetColor, msg))
 }
