@@ -6,6 +6,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 ## Configuration
 You **must** add the environment variables, either this won't work.
 The variables that the system needs are:
+
 ```shell
     export DB_PASSWORD value
     export DB_HOSTNAME value
@@ -15,7 +16,7 @@ The variables that the system needs are:
 
 #### User
 ***
-```json
+```
 {
   "userId": int,
   "username": string,
@@ -35,7 +36,7 @@ The variables that the system needs are:
 
 #### User emails
 ***
-```json
+```
 {
   "userEmailId:" int,
   "userId": int,
@@ -52,7 +53,7 @@ The variables that the system needs are:
 
 #### User roles
 ***
-```json
+```
 {
   "userId": int,
   "roleId": int
@@ -61,7 +62,7 @@ The variables that the system needs are:
 
 #### Roles
 ***
-```json
+```
 {
   "roleId": int,
   "name": string,
@@ -71,7 +72,7 @@ The variables that the system needs are:
 
 #### SSO user login
 ***
-```json
+```
 {
   "ssoUserLoginId": int,
   "userId": int,
@@ -82,7 +83,7 @@ The variables that the system needs are:
 
 #### Role claims
 ***
-```json
+```
 {
   "roleClaimId": int,
   "roleId": int,
