@@ -6,9 +6,8 @@ import (
 )
 
 func TestNewConfigShouldReturnNonEmptyConfig(t *testing.T) {
-	config, err := New()
+	config := New()
 
-	require.NoError(t, err)
 	require.NotEmpty(t, config.Database.Database)
 	require.Equal(t, "prueba", config.Database.Password)
 }
