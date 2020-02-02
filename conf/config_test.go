@@ -9,5 +9,5 @@ func TestNewConfigShouldReturnNonEmptyConfig(t *testing.T) {
 	config := New()
 
 	require.NotEmpty(t, config.Database.Database)
-	require.Equal(t, "prueba", config.Database.Password)
+	require.Equal(t, "cienciaArgentinaDev", config.Database.User)
 }
