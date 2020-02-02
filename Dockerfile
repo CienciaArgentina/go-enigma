@@ -1,6 +1,6 @@
 FROM golang:1.13.6 as builder
 # install xz
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils \
 && rm -rf /var/lib/apt/lists/*
 # install UPX
@@ -12,7 +12,7 @@ RUN xz -d -c /usr/local/upx-3.94-amd64_linux.tar.xz | \
 RUN go get github.com/golang/dep/cmd/dep
 # create a working directory
 WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
-ADD . /go/src/github.com/CienciaArgentina/go-enigma/
+COPY . /go/src/github.com/CienciaArgentina/go-enigma/
 
 COPY go.mod .
 COPY go.sum .
