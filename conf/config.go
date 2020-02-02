@@ -36,7 +36,7 @@ func New() *Configuration {
 
 	a, _ := os.Getwd()
 	fmt.Print(a)
-	data, err := os.Open(fmt.Sprintf("conf/config.%s.yml", scope))
+	data, err := os.Open(fmt.Sprintf("config.%s.yml", scope))
 	if err != nil {
 		// handle error
 	}
