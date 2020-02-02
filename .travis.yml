@@ -12,11 +12,7 @@ notifications:
 before_install:
   - go get -t -v ./...
 
-before_script:
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.23.1
-
 script:
-  - golangci-lint run
   - go test -v -race ./...
 
 after_success:
