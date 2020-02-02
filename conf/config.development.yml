@@ -1,5 +1,6 @@
+appname: enigma
 database:
   user: "cienciaArgentinaDev"
-  password: "cienciaArgentina"
-  host: "localhost"
   database: "cienciaargentinadev"
+server:
+  port: 8080

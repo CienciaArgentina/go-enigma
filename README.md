@@ -1,14 +1,31 @@
 # Enigma
 
+# Table of content
+- [Introduction](#introduction)
+- [Configuration](#Configuration)
+- [Entities](#entities)
+
 ## Introduction
 Its main purpose is to provide a service for both authentication and authorization.
 
+## Must read
+- Before any commit (and pull-request) you should use `gofmt`
+- Do not add any dependency without asking first (and of course make use of `go mod tidy`)
+
+## Configuration
+You **must** add the environment variables, either this won't work.
+The variables that the system need are:
+
+```Bash
+    export DB_PASSWORD="value"
+    export DB_HOSTNAME="value"
+```
 
 ## Entities
 
 #### User
 ***
-```json
+```
 {
   "userId": int,
   "username": string,
@@ -28,7 +45,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 
 #### User emails
 ***
-```json
+```
 {
   "userEmailId:" int,
   "userId": int,
@@ -45,7 +62,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 
 #### User roles
 ***
-```json
+```
 {
   "userId": int,
   "roleId": int
@@ -54,7 +71,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 
 #### Roles
 ***
-```json
+```
 {
   "roleId": int,
   "name": string,
@@ -64,7 +81,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 
 #### SSO user login
 ***
-```json
+```
 {
   "ssoUserLoginId": int,
   "userId": int,
@@ -75,7 +92,7 @@ Its main purpose is to provide a service for both authentication and authorizati
 
 #### Role claims
 ***
-```json
+```
 {
   "roleClaimId": int,
   "roleId": int,
