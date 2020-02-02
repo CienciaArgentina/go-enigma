@@ -7,6 +7,5 @@ import (
 
 func TestNewConfigShouldReturnNonEmptyConfig(t *testing.T) {
 	config := New()
-
 	require.Equal(t, "cienciaArgentinaDev", config.Database.User)
 }
