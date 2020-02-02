@@ -13,10 +13,16 @@ RUN go get github.com/golang/dep/cmd/dep
 # create a working directory
 WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
 ADD . /go/src/github.com/CienciaArgentina/go-enigma/
-# Populate the module cache based on the go.{mod,sum} files.
+
 COPY go.mod .
 COPY go.sum .
-RUN vgo list -e $(vgo list -f '{{.Path}}' -m all)
+
+# Get dependancies - will also be cached if we won't change mod/sum
+RUN go mod download
+# COPY the source code as the last step
+COPY . .
+
+
 # build the source
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main
 # strip and compress the binary
