@@ -9,6 +9,9 @@ git:
 notifications:
   email: false
 
+env:
+  CODECOV_TOKEN="a7f4f4ac-498f-45a6-9938-85425a7828aa"
+
 before_install:
   - go get -t -v ./...
 
