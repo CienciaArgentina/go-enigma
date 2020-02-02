@@ -22,7 +22,5 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-    - name: Godacov Report
-      uses: brpaz/godacov-action@v1.0.3
     - name: Build
       run: go build -v .
