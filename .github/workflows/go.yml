@@ -24,3 +24,6 @@ jobs:
         fi
     - name: Build
       run: go build -v ./cmd/enigma/main.go
+   - name: Godacov Report
+      uses: brpaz/godacov-action@v1.0.3
+
