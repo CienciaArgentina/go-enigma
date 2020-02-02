@@ -26,7 +26,7 @@ before_install:
 # script always run to completion (set +e). All of these code checks are must haves
 # in a modern Go project.
 script:
-  - go test -race -coverprofile=coverage.txt -covermode=atomic -run ''  # Run all the tests with the race detector enabled
+  - go test ./...
   - gocyclo -over 19 $GO_FILES               # forbid code with huge functions
 
 
