@@ -1,6 +1,0 @@
-appname: enigma
-database:
-  user: "cienciaArgentinaDev"
-  database: "cienciaargentinadev"
-server:
-  port: 8080
