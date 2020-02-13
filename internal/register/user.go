@@ -1,6 +1,8 @@
 package register
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	UserId              int       `json:user_id`

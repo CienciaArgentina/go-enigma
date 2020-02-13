@@ -1,8 +1,11 @@
 package register
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/argon2"
 	"regexp"
 	"strings"
 	"time"
@@ -67,8 +70,7 @@ func defaultRegisterOptions() *RegisterOptions {
 }
 
 type Repository interface {
-	SignUp(u *UserSignUpDto) []error
-	GenerateVerificationToken(email string) string
+	SignUp(u *User, e *UserEmail) (int64, error)
 }
 
 type Service interface {
@@ -90,8 +92,39 @@ func New(r Repository, ro *RegisterOptions) Service {
 
 func (rs *registerService) SignUp(u *UserSignUpDto) []error {
 	// User sign up form verifications
+	var errs []error
 	if ok, errs := rs.userSignUpDtoCanRegister(u); !ok {
 		return errs
+	}
+
+	user := &User{
+		Username:            u.Username,
+		NormalizedUsername:  strings.ToUpper(u.Username),
+		LockoutEnabled:      false,
+		LockoutEnd:          nil,
+		FailedLoginAttempts: 0,
+		DateCreated:         time.Now(),
+		SecurityToken:       nil,
+		VerificationToken:   rs.GenerateVerificationToken(u.Email),
+		DateDeleted:         nil,
+	}
+
+	var err error
+	user.PasswordHash, err = GenerateEncodedHash(u.Password)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	// TODO: Save user
+
+	email := &UserEmail{
+		UserId:           "",
+		Email:            u.Email,
+		NormalizedEmail:  strings.ToUpper(u.Email),
+		VerfiedEmail:     false,
+		VerificationDate: nil,
+		DateCreated:      time.Now(),
+		DateDeleted:      nil,
 	}
 
 	return nil
@@ -179,4 +212,59 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUpDto) (bool, []e
 	}
 
 	return true, nil
+}
+
+func generateFromPassword(password string, p *argonParams) (string, error) {
+	// Generate a cryptographically secure random salt.
+	salt, err := generateRandomBytes(p.saltLength)
+	if err != nil {
+		return "", err
+	}
+
+	hash := argon2.IDKey([]byte(password), salt, p.iterations, p.memory, p.parallelism, p.keyLength)
+
+	// Base64 encode the salt and hashed password.
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+
+	// Return a string using the standard encoded hash representation.
+	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.memory, p.iterations, p.parallelism, b64Salt, b64Hash)
+
+	return encodedHash, nil
+}
+
+func generateRandomBytes(n uint32) ([]byte, error) {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+type argonParams struct {
+	memory      uint32
+	iterations  uint32
+	parallelism uint8
+	saltLength  uint32
+	keyLength   uint32
+}
+
+// https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go
+func GenerateEncodedHash(pw string) (string, error) {
+	p := &argonParams{
+		memory:      64 * 1024,
+		iterations:  3,
+		parallelism: 2,
+		saltLength:  32,
+		keyLength:   32,
+	}
+
+	encodedHash, err := generateFromPassword(pw, p)
+	if err != nil {
+		return "", err
+	}
+
+	return encodedHash, nil
 }
