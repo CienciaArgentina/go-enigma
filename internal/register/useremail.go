@@ -3,8 +3,8 @@ package register
 import "time"
 
 type UserEmail struct {
-	UserEmailId      string    `json:user_email_id`
-	UserId           string    `json:user_id`
+	UserEmailId      int       `json:user_email_id`
+	UserId           int64     `json:user_id`
 	Email            string    `json:email`
 	NormalizedEmail  string    `json:normalized_email`
 	VerfiedEmail     bool      `json:verified_email`

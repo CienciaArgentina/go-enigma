@@ -22,8 +22,9 @@ var (
 	errPwDoesNotContainsLowercase     = errors.New("La contraseña debe contener al menos un caracter en minúscula")
 	errPwContainsSpace                = errors.New("La contraseña no puede poseer el caracter de espacio")
 	errPwDoesNotContainsNonAlphaChars = errors.New("La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)")
-	errPwDoesNotContainsADigit 		  = errors.New("La contraseña debe poseer al menos 1 dígito")
-	errUsernameCotainsIlegalChars	  = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
+	errPwDoesNotContainsADigit        = errors.New("La contraseña debe poseer al menos 1 dígito")
+	errUsernameCotainsIlegalChars     = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
+	errEmailAlreadyRegistered         = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
 )
 
 type RegisterOptions struct {
@@ -51,6 +52,22 @@ type RegisterOptions struct {
 	}
 }
 
+type Repository interface {
+	AddUser(u *User) (int64, error)
+	AddEmail(e *UserEmail) (int64, error)
+	VerifyIfEmailExists(email string) (bool, error)
+}
+
+type Service interface {
+	SignUp(u *UserSignUpDto) []error
+	GenerateVerificationToken(email string) string
+}
+
+type registerService struct {
+	repository Repository
+	config     *RegisterOptions
+}
+
 // These are the standard default options
 func defaultRegisterOptions() *RegisterOptions {
 	o := &RegisterOptions{}
@@ -67,20 +84,6 @@ func defaultRegisterOptions() *RegisterOptions {
 	o.PasswordOptions.RequiredUniqueChars = 1
 
 	return o
-}
-
-type Repository interface {
-	SignUp(u *User, e *UserEmail) (int64, error)
-}
-
-type Service interface {
-	SignUp(u *UserSignUpDto) []error
-	GenerateVerificationToken(email string) string
-}
-
-type registerService struct {
-	repository Repository
-	config     *RegisterOptions
 }
 
 func New(r Repository, ro *RegisterOptions) Service {
@@ -101,12 +104,9 @@ func (rs *registerService) SignUp(u *UserSignUpDto) []error {
 		Username:            u.Username,
 		NormalizedUsername:  strings.ToUpper(u.Username),
 		LockoutEnabled:      false,
-		LockoutEnd:          nil,
 		FailedLoginAttempts: 0,
 		DateCreated:         time.Now(),
-		SecurityToken:       nil,
 		VerificationToken:   rs.GenerateVerificationToken(u.Email),
-		DateDeleted:         nil,
 	}
 
 	var err error
@@ -115,16 +115,24 @@ func (rs *registerService) SignUp(u *UserSignUpDto) []error {
 		errs = append(errs, err)
 	}
 
-	// TODO: Save user
+	userId, err := rs.repository.AddUser(user)
+	if err != nil {
+		errs = append(errs, err)
+		return errs
+	}
 
 	email := &UserEmail{
-		UserId:           "",
-		Email:            u.Email,
-		NormalizedEmail:  strings.ToUpper(u.Email),
-		VerfiedEmail:     false,
-		VerificationDate: nil,
-		DateCreated:      time.Now(),
-		DateDeleted:      nil,
+		UserId:          userId,
+		Email:           u.Email,
+		NormalizedEmail: strings.ToUpper(u.Email),
+		VerfiedEmail:    false,
+		DateCreated:     time.Now(),
+	}
+
+	_, err = rs.repository.AddEmail(email)
+	if err != nil {
+		errs = append(errs, err)
+		return errs
 	}
 
 	return nil
@@ -161,7 +169,14 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUpDto) (bool, []e
 	}
 
 	if rs.config.UserOptions.RequireUniqueEmail {
-		// TODO: Verify if email already exists
+		exists, err := rs.repository.VerifyIfEmailExists(u.Email)
+		if err != nil {
+			return false, append(errs, err)
+		}
+
+		if exists {
+			return false, append(errs, errEmailAlreadyRegistered)
+		}
 	}
 
 	usernameMatch, _ := regexp.Match(rs.config.UserOptions.AllowedCharacters, []byte(u.Username))
@@ -175,7 +190,7 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUpDto) (bool, []e
 
 	// Password checks
 	if len(u.Password) < rs.config.PasswordOptions.RequiredLength {
-		errs = append(errs, fmt.Errorf("El campo de contraseña tiene menos de %s caracteres", rs.config.PasswordOptions.RequiredLength))
+		errs = append(errs, fmt.Errorf("El campo de contraseña tiene menos de %d caracteres", rs.config.PasswordOptions.RequiredLength))
 	}
 
 	if rs.config.PasswordOptions.RequireUppercase {
@@ -252,11 +267,12 @@ type argonParams struct {
 }
 
 // https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go
+// For guidance and an outline process for choosing appropriate parameters see https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4.
 func GenerateEncodedHash(pw string) (string, error) {
 	p := &argonParams{
-		memory:      64 * 1024,
-		iterations:  3,
-		parallelism: 2,
+		memory:      128 * 1024,
+		iterations:  4,
+		parallelism: 4,
 		saltLength:  32,
 		keyLength:   32,
 	}
