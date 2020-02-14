@@ -168,6 +168,8 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUpDto) (bool, []e
 		return false, append(errs, errEmptyEmail)
 	}
 
+	// TODO: Verify if email regex match
+
 	if rs.config.UserOptions.RequireUniqueEmail {
 		exists, err := rs.repository.VerifyIfEmailExists(u.Email)
 		if err != nil {
