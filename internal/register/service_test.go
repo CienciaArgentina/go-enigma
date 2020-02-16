@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	completeUserDto = &UserSignUpDto{
+	completeUserDto = &UserSignUp{
 		Username: "Juancito123",
 		Password: "Password!123",
 		Email:    "n@n.com",
@@ -54,7 +54,7 @@ func TestNewShouldReturnNewService(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{}
+	u := UserSignUp{}
 
 	_, errs := srv.SignUp(&u)
 
@@ -64,7 +64,7 @@ func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "",
 	}
 
@@ -76,7 +76,7 @@ func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "",
 	}
@@ -89,7 +89,7 @@ func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
 		Email:    "",
@@ -103,7 +103,7 @@ func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
 		Email:    "n@n.com",
@@ -118,7 +118,7 @@ func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
 		Email:    "n@n.com",
@@ -133,7 +133,7 @@ func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan^",
 		Password: "password",
 		Email:    "n@n.com",
@@ -147,7 +147,7 @@ func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "pass word",
 		Email:    "n@n.com",
@@ -161,7 +161,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "p",
 		Email:    "n@n.com",
@@ -175,7 +175,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T)
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "password$1",
 		Email:    "n@n.com",
@@ -189,7 +189,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAAAAAAA$1",
 		Email:    "n@n.com",
@@ -204,7 +204,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAAAAAAAaa1",
 		Email:    "n@n.com",
@@ -219,7 +219,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)
-	u := UserSignUpDto{
+	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAaa!!AA",
 		Email:    "n@n.com",

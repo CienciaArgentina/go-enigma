@@ -16,7 +16,7 @@ func NewRegisterController(svc register.Service) *registerController {
 }
 
 func (r *registerController) SignUp(c *gin.Context) {
-	var dto register.UserSignUpDto
+	var dto register.UserSignUp
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err.Error()))

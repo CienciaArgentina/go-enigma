@@ -59,7 +59,7 @@ type Repository interface {
 }
 
 type Service interface {
-	SignUp(u *UserSignUpDto) (int64, []error)
+	SignUp(u *UserSignUp) (int64, []error)
 	GenerateVerificationToken(email string) string
 }
 
@@ -93,7 +93,7 @@ func New(r Repository, ro *RegisterOptions) Service {
 	return &registerService{repository: r, config: ro}
 }
 
-func (rs *registerService) SignUp(u *UserSignUpDto) (int64, []error) {
+func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 	// User sign up form verifications
 	var errs []error
 	if ok, errs := rs.userSignUpDtoCanRegister(u); !ok {
@@ -153,7 +153,7 @@ func (rs *registerService) GenerateVerificationToken(email string) string {
 	return tokenString
 }
 
-func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUpDto) (bool, []error) {
+func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []error) {
 	var errs []error
 	// Check that every field is correct
 	if u.Username == "" {
