@@ -100,6 +100,20 @@ func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 	require.Equal(t, errEmptyEmail, errs[0])
 }
 
+func TestSignUpShouldReturnErrorWhenEmailFormatIsInvalid(t *testing.T) {
+	repoMock := new(RegisterRepositoryMock)
+	srv := New(repoMock, nil)
+	u := UserSignUp{
+		Username: "Juan",
+		Password: "password",
+		Email:    "asd@gm_ail.com",
+	}
+
+	_, errs := srv.SignUp(&u)
+
+	require.Equal(t, errInvalidEmail, errs[0])
+}
+
 func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
 	srv := New(repoMock, nil)

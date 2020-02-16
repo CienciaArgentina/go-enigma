@@ -25,6 +25,7 @@ var (
 	errPwDoesNotContainsADigit        = errors.New("La contraseña debe poseer al menos 1 dígito")
 	errUsernameCotainsIlegalChars     = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
 	errEmailAlreadyRegistered         = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
+	errInvalidEmail = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
 )
 
 type RegisterOptions struct {
@@ -168,7 +169,14 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 		return false, append(errs, errEmptyEmail)
 	}
 
-	// TODO: Verify if email regex match
+	validEmail, err := regexp.Match("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
+		[]byte(u.Email))
+	if err != nil {
+		return false, append(errs, err)
+	}
+	if !validEmail {
+		return false, append(errs, errInvalidEmail)
+	}
 
 	if rs.config.UserOptions.RequireUniqueEmail {
 		exists, err := rs.repository.VerifyIfEmailExists(u.Email)
