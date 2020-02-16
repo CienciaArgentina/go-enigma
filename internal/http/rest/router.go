@@ -1,18 +1,28 @@
 package rest
 
 import (
-	"github.com/CienciaArgentina/go-enigma/conf"
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter(c *conf.Configuration) *gin.Engine {
-	router := gin.Default()
-	gin.ForceConsoleColor()
-	router.RedirectTrailingSlash = true
-	router.RedirectFixedPath = true
-	port := c.Server.Port
-	if port == 0 {
-		port = 8080
+var (
+	Router *gin.Engine
+)
+
+func InitRouter(h *healthController, ur *registerController) *gin.Engine {
+	r := gin.Default()
+	MapRoutes(r, h, ur)
+	return r
+}
+
+func MapRoutes(r *gin.Engine, h *healthController, ur *registerController) {
+	// Health
+	health := r.Group("/health")
+	{
+		health.GET("/ping", h.Ping)
 	}
-	return router
+
+	user := r.Group("/users")
+	{
+		user.POST("/", ur.SignUp)
+	}
 }

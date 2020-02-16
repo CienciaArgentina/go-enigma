@@ -5,7 +5,12 @@ import (
 	"net/http"
 )
 
+type healthController struct{}
 
-func Ping(c *gin.Context) {
-	c.String(http.StatusOK, "pong")
+func NewHealthController() *healthController {
+	return &healthController{}
+}
+
+func (h *healthController) Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, "pong")
 }
