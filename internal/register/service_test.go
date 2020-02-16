@@ -56,7 +56,7 @@ func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 	srv := New(repoMock, nil)
 	u := UserSignUpDto{}
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errEmptyUsername, errs[0])
 }
@@ -68,7 +68,7 @@ func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 		Username: "",
 	}
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errEmptyUsername, errs[0])
 }
@@ -81,7 +81,7 @@ func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 		Password: "",
 	}
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errEmptyPassword, errs[0])
 }
@@ -95,7 +95,7 @@ func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 		Email:    "",
 	}
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errEmptyEmail, errs[0])
 }
@@ -110,7 +110,7 @@ func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(true, nil)
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errEmailAlreadyRegistered, errs[0])
 }
@@ -125,7 +125,7 @@ func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(true, errors.New("Indiferent"))
 
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, "Indiferent", errs[0].Error())
 }
@@ -139,7 +139,7 @@ func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errUsernameCotainsIlegalChars, errs[0])
 }
@@ -153,7 +153,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errPwContainsSpace, errs[0])
 }
@@ -167,7 +167,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T)
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, "El campo de contraseña tiene menos de 8 caracteres", errs[0].Error())
 }
@@ -181,7 +181,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Equal(t, errPwDoesNotContainsUppercase, errs[0])
 }
@@ -195,7 +195,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
 	require.Equal(t, errPwDoesNotContainsLowercase, errs[0])
@@ -210,7 +210,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
 	require.Equal(t, errPwDoesNotContainsNonAlphaChars, errs[0])
@@ -225,7 +225,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) 
 		Email:    "n@n.com",
 	}
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
-	errs := srv.SignUp(&u)
+	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
 	require.Equal(t, errPwDoesNotContainsADigit, errs[0])
@@ -237,7 +237,7 @@ func TestSignUpShouldReturnErrorIfAddUserFails(t *testing.T) {
 	repoMock.On(VerifyIfEmailExists, completeUserDto.Email).Return(false, nil)
 	repoMock.On(AddUser, mock.Anything).Return(int64(0), errors.New("Indiferent"))
 
-	errs := srv.SignUp(completeUserDto)
+	_, errs := srv.SignUp(completeUserDto)
 
 	require.Len(t, errs, 1)
 	require.Equal(t, "Indiferent", errs[0].Error())
@@ -251,7 +251,7 @@ func TestSignUpShouldReturnErrorIfAddEmailFails(t *testing.T) {
 	repoMock.On(AddUser, mock.Anything).Return(userId, nil)
 	repoMock.On(AddEmail, mock.Anything).Return(int64(0), errors.New("Indiferent"))
 
-	errs := srv.SignUp(completeUserDto)
+	_, errs := srv.SignUp(completeUserDto)
 
 	require.Len(t, errs, 1)
 	require.Equal(t, "Indiferent", errs[0].Error())
@@ -265,7 +265,7 @@ func TestSignUpShouldNoFail(t *testing.T) {
 	repoMock.On(AddUser, mock.Anything).Return(userId, nil)
 	repoMock.On(AddEmail, mock.Anything).Return(int64(0), nil)
 
-	errs := srv.SignUp(completeUserDto)
+	_, errs := srv.SignUp(completeUserDto)
 
 	require.Len(t, errs, 0)
 	require.Nil(t, errs)
