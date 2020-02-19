@@ -16,7 +16,7 @@ func NewRegisterRepository(db *sqlx.DB) register.Repository {
 
 func (r *registerRepository) AddUser(u *register.User) (int64, error) {
 	res, err := r.db.Exec("INSERT INTO users (`username`, `normalized_username`, `password_hash`, `lockout_enabled`,  "+
-		"`date_created`, `verification_token`) VALUES ($1, $2, $3, $4, $5, $6)", u.Username, u.NormalizedUsername, u.PasswordHash, u.LockoutEnabled, u.DateCreated, u.VerificationToken)
+		"`date_created`, `verification_token`) VALUES ($1, $2, $3, $4, $5, $6)", u.Username, u.NormalizedUsername, u.PasswordHash, u.DateCreated, u.VerificationToken)
 
 	if err != nil {
 		return 0, err

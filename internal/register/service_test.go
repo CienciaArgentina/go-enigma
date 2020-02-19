@@ -2,6 +2,7 @@ package register
 
 import (
 	"errors"
+	"github.com/CienciaArgentina/go-enigma/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -23,6 +24,7 @@ var (
 		Password: "Password!123",
 		Email:    "n@n.com",
 	}
+	cfg = config.DefaultConfiguration()
 )
 
 func (r *RegisterRepositoryMock) AddUser(u *User) (int64, error) {
@@ -47,13 +49,13 @@ func TestDefaultRegisterOptionsShouldReturnOptions(t *testing.T) {
 
 func TestNewShouldReturnNewService(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	require.NotNil(t, srv)
 }
 
 func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{}
 
 	_, errs := srv.SignUp(&u)
@@ -63,7 +65,7 @@ func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "",
 	}
@@ -75,7 +77,7 @@ func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "",
@@ -88,7 +90,7 @@ func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
@@ -102,7 +104,7 @@ func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenEmailFormatIsInvalid(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
@@ -116,7 +118,7 @@ func TestSignUpShouldReturnErrorWhenEmailFormatIsInvalid(t *testing.T) {
 
 func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
@@ -131,7 +133,7 @@ func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "password",
@@ -146,7 +148,7 @@ func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan^",
 		Password: "password",
@@ -160,7 +162,7 @@ func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "pass word",
@@ -174,7 +176,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 
 func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "p",
@@ -188,7 +190,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T)
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "password$1",
@@ -202,7 +204,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAAAAAAA$1",
@@ -217,7 +219,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAAAAAAAaa1",
@@ -232,7 +234,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	u := UserSignUp{
 		Username: "Juan",
 		Password: "AAaa!!AA",
@@ -247,7 +249,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) 
 
 func TestSignUpShouldReturnErrorIfAddUserFails(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	repoMock.On(VerifyIfEmailExists, completeUserDto.Email).Return(false, nil)
 	repoMock.On(AddUser, mock.Anything).Return(int64(0), errors.New("Indiferent"))
 
@@ -259,7 +261,7 @@ func TestSignUpShouldReturnErrorIfAddUserFails(t *testing.T) {
 
 func TestSignUpShouldReturnErrorIfAddEmailFails(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	userId := int64(12)
 	repoMock.On(VerifyIfEmailExists, completeUserDto.Email).Return(false, nil)
 	repoMock.On(AddUser, mock.Anything).Return(userId, nil)
@@ -273,7 +275,7 @@ func TestSignUpShouldReturnErrorIfAddEmailFails(t *testing.T) {
 
 func TestSignUpShouldNoFail(t *testing.T) {
 	repoMock := new(RegisterRepositoryMock)
-	srv := New(repoMock, nil)
+	srv := NewService(repoMock, nil, cfg)
 	userId := int64(12)
 	repoMock.On(VerifyIfEmailExists, completeUserDto.Email).Return(false, nil)
 	repoMock.On(AddUser, mock.Anything).Return(userId, nil)

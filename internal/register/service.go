@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/CienciaArgentina/go-enigma/config"
 	"golang.org/x/crypto/argon2"
 	"regexp"
 	"strings"
@@ -25,7 +26,7 @@ var (
 	errPwDoesNotContainsADigit        = errors.New("La contraseña debe poseer al menos 1 dígito")
 	errUsernameCotainsIlegalChars     = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
 	errEmailAlreadyRegistered         = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
-	errInvalidEmail = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
+	errInvalidEmail                   = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
 )
 
 type RegisterOptions struct {
@@ -53,20 +54,22 @@ type RegisterOptions struct {
 	}
 }
 
-type Repository interface {
-	AddUser(u *User) (int64, error)
-	AddEmail(e *UserEmail) (int64, error)
-	VerifyIfEmailExists(email string) (bool, error)
-}
-
 type Service interface {
 	SignUp(u *UserSignUp) (int64, []error)
 	GenerateVerificationToken(email string) string
 }
 
 type registerService struct {
-	repository Repository
-	config     *RegisterOptions
+	repository      Repository
+	registerOptions *RegisterOptions
+	config          *config.Configuration
+}
+
+func NewService(r Repository, ro *RegisterOptions, cfg *config.Configuration) Service {
+	if ro == (&RegisterOptions{}) || ro == nil {
+		ro = defaultRegisterOptions()
+	}
+	return &registerService{repository: r, registerOptions: ro, config: cfg}
 }
 
 // These are the standard default options
@@ -87,13 +90,6 @@ func defaultRegisterOptions() *RegisterOptions {
 	return o
 }
 
-func New(r Repository, ro *RegisterOptions) Service {
-	if ro == (&RegisterOptions{}) || ro == nil {
-		ro = defaultRegisterOptions()
-	}
-	return &registerService{repository: r, config: ro}
-}
-
 func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 	// User sign up form verifications
 	var errs []error
@@ -102,12 +98,10 @@ func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 	}
 
 	user := &User{
-		Username:            u.Username,
-		NormalizedUsername:  strings.ToUpper(u.Username),
-		LockoutEnabled:      false,
-		FailedLoginAttempts: 0,
-		DateCreated:         time.Now(),
-		VerificationToken:   rs.GenerateVerificationToken(u.Email),
+		Username:           u.Username,
+		NormalizedUsername: strings.ToUpper(u.Username),
+		DateCreated:        time.Now(),
+		VerificationToken:  rs.GenerateVerificationToken(u.Email),
 	}
 
 	var err error
@@ -140,16 +134,13 @@ func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 }
 
 func (rs *registerService) GenerateVerificationToken(email string) string {
-	// TODO: Move the sign key to cfg file
-	var sign = []byte("clave")
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email":      email,
-		"expiryDate": time.Now().Add(rs.config.UserOptions.EmailVerificationExpiryDuration).Unix(),
+		"expiryDate": time.Now().Add(rs.registerOptions.UserOptions.EmailVerificationExpiryDuration).Unix(),
 		"timestamp":  time.Now().Unix(),
 	})
 
-	tokenString, _ := token.SignedString(sign)
+	tokenString, _ := token.SignedString(rs.config.Keys.PasswordHashingKey)
 
 	return tokenString
 }
@@ -178,7 +169,7 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 		return false, append(errs, errInvalidEmail)
 	}
 
-	if rs.config.UserOptions.RequireUniqueEmail {
+	if rs.registerOptions.UserOptions.RequireUniqueEmail {
 		exists, err := rs.repository.VerifyIfEmailExists(u.Email)
 		if err != nil {
 			return false, append(errs, err)
@@ -189,7 +180,7 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 		}
 	}
 
-	usernameMatch, _ := regexp.Match(rs.config.UserOptions.AllowedCharacters, []byte(u.Username))
+	usernameMatch, _ := regexp.Match(rs.registerOptions.UserOptions.AllowedCharacters, []byte(u.Username))
 	if usernameMatch {
 		errs = append(errs, errUsernameCotainsIlegalChars)
 	}
@@ -199,18 +190,18 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	}
 
 	// Password checks
-	if len(u.Password) < rs.config.PasswordOptions.RequiredLength {
-		errs = append(errs, fmt.Errorf("El campo de contraseña tiene menos de %d caracteres", rs.config.PasswordOptions.RequiredLength))
+	if len(u.Password) < rs.registerOptions.PasswordOptions.RequiredLength {
+		errs = append(errs, fmt.Errorf("El campo de contraseña tiene menos de %d caracteres", rs.registerOptions.PasswordOptions.RequiredLength))
 	}
 
-	if rs.config.PasswordOptions.RequireUppercase {
+	if rs.registerOptions.PasswordOptions.RequireUppercase {
 		match, _ := regexp.Match(".*[A-Z].*", []byte(u.Password))
 		if !match {
 			errs = append(errs, errPwDoesNotContainsUppercase)
 		}
 	}
 
-	if rs.config.PasswordOptions.RequireLowercase {
+	if rs.registerOptions.PasswordOptions.RequireLowercase {
 		match, _ := regexp.Match(".*[a-z].*", []byte(u.Password))
 		if !match {
 			errs = append(errs, errPwDoesNotContainsLowercase)
@@ -218,14 +209,14 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	}
 
 	// List of avalaible chars: ~!@#$%^&*()-+=?/<>|{}_:;.,
-	if rs.config.PasswordOptions.RequireNonAlphanumeric {
+	if rs.registerOptions.PasswordOptions.RequireNonAlphanumeric {
 		match, _ := regexp.Match(".*[~!@#$%^&*()-+=?/<>|{}_:;.,].*", []byte(u.Password))
 		if !match {
 			errs = append(errs, errPwDoesNotContainsNonAlphaChars)
 		}
 	}
 
-	if rs.config.PasswordOptions.RequireDigit {
+	if rs.registerOptions.PasswordOptions.RequireDigit {
 		match, _ := regexp.Match(".*\\d.*", []byte(u.Password))
 		if !match {
 			errs = append(errs, errPwDoesNotContainsADigit)
@@ -239,21 +230,21 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	return true, nil
 }
 
-func generateFromPassword(password string, p *argonParams) (string, error) {
+func generateFromPassword(password string, p *config.ArgonParams) (string, error) {
 	// Generate a cryptographically secure random salt.
-	salt, err := generateRandomBytes(p.saltLength)
+	salt, err := generateRandomBytes(p.SaltLength)
 	if err != nil {
 		return "", err
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, p.iterations, p.memory, p.parallelism, p.keyLength)
+	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
 
 	// Base64 encode the salt and hashed password.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
 	// Return a string using the standard encoded hash representation.
-	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.memory, p.iterations, p.parallelism, b64Salt, b64Hash)
+	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.Memory, p.Iterations, p.Parallelism, b64Salt, b64Hash)
 
 	return encodedHash, nil
 }
@@ -268,23 +259,15 @@ func generateRandomBytes(n uint32) ([]byte, error) {
 	return b, nil
 }
 
-type argonParams struct {
-	memory      uint32
-	iterations  uint32
-	parallelism uint8
-	saltLength  uint32
-	keyLength   uint32
-}
-
 // https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go
 // For guidance and an outline process for choosing appropriate parameters see https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4.
 func GenerateEncodedHash(pw string) (string, error) {
-	p := &argonParams{
-		memory:      128 * 1024,
-		iterations:  4,
-		parallelism: 4,
-		saltLength:  32,
-		keyLength:   32,
+	p := &config.ArgonParams{
+		Memory:      128 * 1024,
+		Iterations:  4,
+		Parallelism: 4,
+		SaltLength:  32,
+		KeyLength:   32,
 	}
 
 	encodedHash, err := generateFromPassword(pw, p)

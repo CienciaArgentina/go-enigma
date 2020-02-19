@@ -23,6 +23,7 @@ var (
 type Configuration struct {
 	Database `yaml:database`
 	Server   `yaml:server`
+	Keys     `yaml:keys`
 }
 
 type Database struct {
@@ -34,6 +35,18 @@ type Database struct {
 
 type Server struct {
 	Port string `yaml:server_port`
+}
+
+type Keys struct {
+	PasswordHashingKey string `env:key_passwordHashing`
+}
+
+type ArgonParams struct {
+	Memory      uint32
+	Iterations  uint32
+	Parallelism uint8
+	SaltLength  uint32
+	KeyLength   uint32
 }
 
 func DefaultConfiguration() *Configuration {
@@ -48,6 +61,10 @@ func DefaultConfiguration() *Configuration {
 			},
 			Server: Server{
 				Port: ":8080",
+			},
+			Keys: Keys{
+				// This is just for a development scope
+				PasswordHashingKey: "98616F779CAA278695ADAF88BF4C1",
 			},
 		}
 	}

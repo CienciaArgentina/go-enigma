@@ -16,7 +16,7 @@ func main() {
 	h := rest.NewHealthController()
 
 	regRepo := repositories.NewRegisterRepository(db)
-	regSvc := register.New(regRepo, nil)
+	regSvc := register.NewService(regRepo, nil, cfg)
 	ru := rest.NewRegisterController(regSvc)
 
 	if err := rest.InitRouter(h, ru).Run(cfg.Server.Port); err != nil {
