@@ -19,8 +19,7 @@ var (
 	errInvalidHash         = errors.New("El hash no usa el encoding correcto")
 	errIncompatibleVersion = errors.New("Versión de argon2 incompatible")
 	errThroughLogin        = errors.New("Ocurrió un error al momento de loguear")
-	errInvalidEmail        = errors.New("Por alguna razón tu usuario no tiene email asociado")
-	errEmailNotVerified = errors.New("Tu dirección de email no fue verificada aún")
+	errEmailNotVerified    = errors.New("Tu dirección de email no fue verificada aún")
 )
 
 type LoginOptions struct {
@@ -72,13 +71,9 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 		return "", err
 	}
 
-	user, userEmail := s.repo.GetUserByUsername(u.Username)
-	if user == nil || user == (&User{}) {
-		return "", errInvalidLogin
-	}
-
-	if userEmail == nil || userEmail == (&UserEmail{}) {
-		return "", errInvalidEmail
+	user, userEmail, err := s.repo.GetUserByUsername(u.Username)
+	if err != nil {
+		return "", nil
 	}
 
 	verifyPassword, err := comparePasswordAndHash(u.Password, user.PasswordHash)
@@ -89,7 +84,7 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 
 	if !verifyPassword {
 		if user.FailedLoginAttempts >= s.loginOptions.LockoutOptions.MaxFailedAttempts {
-			err := s.repo.LockAccount(user.UserId)
+			err := s.repo.LockAccount(user.UserId, s.loginOptions.LockoutOptions.LockoutTimeDuration)
 			if err != nil {
 				// TODO: Log this
 			}
@@ -130,8 +125,8 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 
 	jwt := jwt2.NewWithClaims(jwt2.SigningMethodHS256, jwt2.MapClaims{
 		"userId": user.UserId,
-		"email": userEmail.Email,
-		"role": role,
+		"email":  userEmail.Email,
+		"role":   role,
 	})
 
 	jwtString, _ := jwt.SignedString(s.config.Keys.PasswordHashingKey)
