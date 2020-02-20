@@ -27,5 +27,5 @@ func (r *registerController) SignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errs))
 	}
 
-	c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, map[string]string{"userId": strconv.FormatInt(userId, 10)}, nil))
+	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"userId": strconv.FormatInt(userId, 10)}, nil))
 }

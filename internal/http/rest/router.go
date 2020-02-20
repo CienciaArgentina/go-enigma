@@ -8,15 +8,15 @@ var (
 	Router *gin.Engine
 )
 
-func InitRouter(h *healthController, ur *registerController) *gin.Engine {
+func InitRouter(h *healthController, ur *registerController, l *loginController) *gin.Engine {
 	r := gin.Default()
-	MapRoutes(r, h, ur)
+	MapRoutes(r, h, ur, l)
 	return r
 }
 
-func MapRoutes(r *gin.Engine, h *healthController, ur *registerController) {
+func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController) {
 	// Health
-	health := r.Group("/health")
+	health := r.Group("/")
 	{
 		health.GET("/ping", h.Ping)
 	}
@@ -24,5 +24,6 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController) {
 	user := r.Group("/users")
 	{
 		user.POST("/", ur.SignUp)
+		user.POST("/login", l.Login)
 	}
 }
