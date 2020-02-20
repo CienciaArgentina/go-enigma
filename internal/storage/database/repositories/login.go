@@ -88,8 +88,14 @@ func (l *loginRepository) GetUserRole(userId int) (string, error) {
 		return "", errUserIdMustBeGreaterThanZero
 	}
 
+	var roleId int
+	err := l.db.Get(&roleId, "SELECT role_id FROM user_roles where user_id = $1", userId)
+	if err != nil {
+		return "", err
+	}
+
 	var role string
-	err := l.db.Get(&role, "SELECT * FROM user_roles where user_id = $1", userId)
+	err = l.db.Get(&role, "SELECT name FROM roles where role_id = $1", roleId)
 
 	return role, err
 }
