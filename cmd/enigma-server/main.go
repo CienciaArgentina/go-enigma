@@ -11,6 +11,7 @@ import (
 
 func main() {
 
+	// TODO: Refactor this DI asap
 	cfg := config.New()
 	db := database.New(cfg)
 
