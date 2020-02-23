@@ -27,18 +27,19 @@ type Configuration struct {
 }
 
 type Database struct {
-	Username string `yaml:db_username`
-	Password string `env:db_password`
-	Hostname string `env:db_hostname`
-	Port     string `yaml:db_port`
+	Username string `yaml:"db_username"`
+	Password string `env:"db_password"`
+	Hostname string `env:"db_hostname"`
+	Port     string `yaml:"db_port"`
+	Database string `env:"db_name"`
 }
 
 type Server struct {
-	Port string `yaml:server_port`
+	Port string `yaml:"server_port"`
 }
 
 type Keys struct {
-	PasswordHashingKey string `env:key_passwordHashing`
+	PasswordHashingKey string `env:"key_passwordHashing"`
 }
 
 type ArgonParams struct {
@@ -58,6 +59,7 @@ func DefaultConfiguration() *Configuration {
 				Password: "cienciaArgentina",
 				Hostname: "localhost",
 				Port:     "3306",
+				Database: "cienciaargentinaauthdev",
 			},
 			Server: Server{
 				Port: ":8080",

@@ -16,7 +16,7 @@ func New(c *config.Configuration) *sqlx.DB {
 	if c == nil {
 		panic(errNoConfig)
 	}
-	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/", c.Database.Username, c.Database.Password, c.Database.Hostname, c.Database.Port))
+	db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.Database.Username, c.Database.Password, c.Database.Hostname, c.Database.Port, c.Database.Database))
 	if err != nil {
 		panic(err)
 	}

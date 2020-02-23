@@ -1,16 +1,11 @@
 package rest
 
 import (
-	"errors"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
-)
-
-var (
-	errEmptyBody = errors.New("El cuerpo del mensaje no puede estar vacío")
 )
 
 type registerController struct {
@@ -28,7 +23,7 @@ func (r *registerController) SignUp(c *gin.Context) {
 		if strings.Contains(err.Error(), "EOF") {
 			err = errEmptyBody
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err.Error()))
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err))
 		return
 	}
 

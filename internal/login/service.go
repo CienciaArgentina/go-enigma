@@ -118,18 +118,20 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 		// TODO: Log this
 	}
 
-	role, err := s.repo.GetUserRole(user.UserId)
-	if err != nil {
-		// TODO: log this
-	}
+	// TODO: add role
+	//role, err := s.repo.GetUserRole(user.UserId)
+	//if err != nil {
+	//	// TODO: log this
+	//}
 
+	// TODO: add role
 	jwt := jwt2.NewWithClaims(jwt2.SigningMethodHS256, jwt2.MapClaims{
 		"userId": user.UserId,
 		"email":  userEmail.Email,
-		"role":   role,
+		//"role":   role,
 	})
 
-	jwtString, _ := jwt.SignedString(s.config.Keys.PasswordHashingKey)
+	jwtString, _ := jwt.SignedString([]byte(s.config.Keys.PasswordHashingKey))
 
 	return jwtString, nil
 }

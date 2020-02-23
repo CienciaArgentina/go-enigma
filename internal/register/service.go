@@ -140,8 +140,10 @@ func (rs *registerService) GenerateVerificationToken(email string) string {
 		"timestamp":  time.Now().Unix(),
 	})
 
-	tokenString, _ := token.SignedString(rs.config.Keys.PasswordHashingKey)
-
+	tokenString, err := token.SignedString([]byte(rs.config.Keys.PasswordHashingKey))
+	if err != nil {
+		// TODO: log this
+	}
 	return tokenString
 }
 

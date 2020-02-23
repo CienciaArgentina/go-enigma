@@ -1,9 +1,9 @@
 package rest
 
 type BaseResponse struct {
-	Data   interface{}
-	Error  []*APIErrors
-	Status int
+	Data   interface{}  `json:"data"`
+	Error  []*APIErrors `json:"error"`
+	Status int          `json:"status"`
 }
 
 type APIErrors struct {
@@ -11,7 +11,11 @@ type APIErrors struct {
 }
 
 func NewBaseResponse(status int, data interface{}, error interface{}) *BaseResponse {
-	errs := ParseErrors(error)
+	var errs []*APIErrors
+	if error != nil {
+		errs = ParseErrors(error)
+	}
+
 	return &BaseResponse{
 		Data:   data,
 		Error:  errs,
@@ -20,21 +24,24 @@ func NewBaseResponse(status int, data interface{}, error interface{}) *BaseRespo
 }
 
 func ParseErrors(errs interface{}) []*APIErrors {
-
-	errorList, _ := errs.([]error)
-	var errors []string
-	for x := 0; x < len(errorList); x++ {
-		errors = append(errors, errorList[x].Error())
-	}
-
 	var parsedErrorList []*APIErrors
+	errorList, isErrorList := errs.([]error)
+	if isErrorList {
+		var errors []string
+		for x := 0; x < len(errorList); x++ {
+			errors = append(errors, errorList[x].Error())
+		}
 
-	for i := 0; i < len(errors); i++ {
-		tempErr := APIErrors{Detail:errors[i]}
-		parsedErrorList = append(parsedErrorList, &tempErr)
+
+
+		for i := 0; i < len(errors); i++ {
+			tempErr := APIErrors{Detail: errors[i]}
+			parsedErrorList = append(parsedErrorList, &tempErr)
+		}
+	} else {
+		err := errs.(error)
+		parsedErrorList = append(parsedErrorList, &APIErrors{Detail:err.Error()})
 	}
 
 	return parsedErrorList
 }
-
-

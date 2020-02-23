@@ -1,11 +1,13 @@
 package rest
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 )
 
 var (
-	Router *gin.Engine
+	Router       *gin.Engine
+	errEmptyBody = errors.New("El cuerpo del mensaje no puede estar vacío")
 )
 
 func InitRouter(h *healthController, ur *registerController, l *loginController) *gin.Engine {

@@ -24,7 +24,7 @@ func NewLoginRepository(db *sqlx.DB) login.Repository {
 func (l *loginRepository) GetUserByUsername(username string) (*login.User, *login.UserEmail, error) {
 	var user login.User
 
-	err := l.db.Get(&user, "SELECT * FROM users where username = $1",username )
+	err := l.db.Get(&user, "SELECT * FROM users where username = ?", username)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -35,7 +35,7 @@ func (l *loginRepository) GetUserByUsername(username string) (*login.User, *logi
 
 	var userEmail login.UserEmail
 
-	err = l.db.Get(&userEmail, "SELECT * FROM users_emails WHERE user_id = $1", user.UserId)
+	err = l.db.Get(&userEmail, "SELECT * FROM users_email WHERE user_id = ?", user.UserId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -52,7 +52,7 @@ func (l *loginRepository) IncrementLoginFailAttempt(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
-	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id = $1", userId)
+	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id = ?", userId)
 	return err
 }
 
@@ -61,7 +61,7 @@ func (l *loginRepository) ResetLoginFails(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
-	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = 0 where user_id = $1", userId)
+	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = 0 where user_id = ?", userId)
 	return err
 }
 
@@ -70,7 +70,7 @@ func (l *loginRepository) UnlockAccount(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
-	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 0, lockout_date = null where user_id = $1", userId)
+	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 0, lockout_date = null where user_id = ?", userId)
 	return err
 }
 
@@ -79,7 +79,7 @@ func (l *loginRepository) LockAccount(userId int, duration time.Duration) error 
 		return errUserIdMustBeGreaterThanZero
 	}
 
-	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 1, lockout_date = $1 where user_id = $2", time.Now().Add(duration),userId)
+	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 1, lockout_date = ? where user_id = ?", time.Now().Add(duration), userId)
 	return err
 }
 
@@ -89,15 +89,13 @@ func (l *loginRepository) GetUserRole(userId int) (string, error) {
 	}
 
 	var roleId int
-	err := l.db.Get(&roleId, "SELECT role_id FROM user_roles where user_id = $1", userId)
+	err := l.db.Get(&roleId, "SELECT role_id FROM user_roles where user_id = ?", userId)
 	if err != nil {
 		return "", err
 	}
 
 	var role string
-	err = l.db.Get(&role, "SELECT name FROM roles where role_id = $1", roleId)
+	err = l.db.Get(&role, "SELECT name FROM roles where role_id = ?", roleId)
 
 	return role, err
 }
-
-
