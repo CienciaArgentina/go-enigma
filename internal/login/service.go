@@ -82,6 +82,22 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 		return "", errThroughLogin
 	}
 
+	if user.LockoutEnabled {
+		// If the user is locked but time is up we should unlock the account
+		a := user.LockoutDate.Time.Add(s.loginOptions.LockoutOptions.LockoutTimeDuration)
+		fmt.Print(a)
+		if user.LockoutDate.Time.Add(s.loginOptions.LockoutOptions.LockoutTimeDuration).Before(time.Now()) {
+			user.FailedLoginAttempts = 0
+			user.LockoutEnabled = false
+			err := s.repo.UnlockAccount(user.UserId)
+			if err != nil {
+				// TODO: Log this
+			}
+		} else {
+			return "", fmt.Errorf("La cuenta se encuentra bloqueada por %v minutos por intentos fallidos de login", s.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
+		}
+	}
+
 	if !verifyPassword {
 		if user.FailedLoginAttempts >= s.loginOptions.LockoutOptions.MaxFailedAttempts {
 			err := s.repo.LockAccount(user.UserId, s.loginOptions.LockoutOptions.LockoutTimeDuration)
@@ -95,18 +111,6 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 			// TODO: Log this
 		}
 		return "", errInvalidLogin
-	}
-
-	if user.LockoutEnabled {
-		// If the user is locked but time is up we should unlock the account
-		if user.LockoutDate.Add(s.loginOptions.LockoutOptions.LockoutTimeDuration).After(time.Now()) {
-			err := s.repo.UnlockAccount(user.UserId)
-			if err != nil {
-				// TODO: Log this
-			}
-		} else {
-			return "", fmt.Errorf("La cuenta se encuentra bloqueada por %v minutos por intentos fallidos de login", s.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
-		}
 	}
 
 	if s.loginOptions.SignInOptions.RequireConfirmedEmail && !userEmail.VerfiedEmail {

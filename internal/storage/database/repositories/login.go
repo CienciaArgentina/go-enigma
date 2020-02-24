@@ -70,7 +70,7 @@ func (l *loginRepository) UnlockAccount(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
-	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 0, lockout_date = null where user_id = ?", userId)
+	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 0, lockout_date = null, failed_login_attempts = 0 where user_id = ?", userId)
 	return err
 }
 
