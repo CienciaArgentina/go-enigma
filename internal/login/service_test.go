@@ -166,4 +166,3 @@ func TestLoginShouldThrowErrorWhileComparingNonIdenticalPasswords(t *testing.T) 
 	require.Equal(t, config.ErrThroughLogin, err)
 	require.Empty(t, login)
 }
-

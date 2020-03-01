@@ -64,7 +64,7 @@ func TestSendConfirmationEmailShouldReturnNoErrorIfUserEmailIsEmpty(t *testing.T
 func TestSendConfirmationEmailShouldReturnErrorIfEmailIsAlreadyVerified(t *testing.T) {
 	svc, mock := GetServiceAndMock()
 	verified := &UserEmail{
-		VerfiedEmail:     true,
+		VerfiedEmail: true,
 	}
 	mock.On(GetEmailByUserId, int64(1)).Return("notempty", verified, nil)
 	sent, err := svc.SendConfirmationEmail(1)
