@@ -3,23 +3,12 @@ package login
 import (
 	"crypto/subtle"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/config"
 	jwt2 "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/argon2"
 	"strings"
 	"time"
-)
-
-var (
-	errEmptyUsername       = errors.New("El nombre de usuario es necesario para el login")
-	errEmptyPassword       = errors.New("La contraseña es necesaria para el login")
-	errInvalidLogin        = errors.New("El usuario o la contraseña especificados no existe")
-	errInvalidHash         = errors.New("El hash no usa el encoding correcto")
-	errIncompatibleVersion = errors.New("Versión de argon2 incompatible")
-	errThroughLogin        = errors.New("Ocurrió un error al momento de loguear")
-	errEmailNotVerified    = errors.New("Tu dirección de email no fue verificada aún")
 )
 
 type LoginOptions struct {
@@ -79,7 +68,7 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 	verifyPassword, err := comparePasswordAndHash(u.Password, user.PasswordHash)
 	if err != nil {
 		// Return friendly message
-		return "", errThroughLogin
+		return "", config.ErrThroughLogin
 	}
 
 	if user.LockoutEnabled {
@@ -110,11 +99,11 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 		if err != nil {
 			// TODO: Log this
 		}
-		return "", errInvalidLogin
+		return "", config.ErrInvalidLogin
 	}
 
 	if s.loginOptions.SignInOptions.RequireConfirmedEmail && !userEmail.VerfiedEmail {
-		return "", errEmailNotVerified
+		return "", config.ErrEmailNotVerified
 	}
 
 	err = s.repo.ResetLoginFails(user.UserId)
@@ -142,11 +131,11 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 
 func (s *loginService) VerifyCanLogin(u *UserLogin) (bool, error) {
 	if u.Username == "" {
-		return false, errEmptyUsername
+		return false, config.ErrEmptyUsername
 	}
 
 	if u.Password == "" {
-		return false, errEmptyPassword
+		return false, config.ErrEmptyPassword
 	}
 
 	return true, nil
@@ -176,7 +165,7 @@ func decodeHash(encodedHash string) (p *config.ArgonParams, salt, hash []byte, e
 	vals := strings.Split(encodedHash, "$")
 	if len(vals) != 6 {
 		// TODO: Log this
-		return nil, nil, nil, errInvalidHash
+		return nil, nil, nil, config.ErrInvalidHash
 	}
 
 	var version int
@@ -186,7 +175,7 @@ func decodeHash(encodedHash string) (p *config.ArgonParams, salt, hash []byte, e
 	}
 	if version != argon2.Version {
 		// TODO: Log this
-		return nil, nil, nil, errIncompatibleVersion
+		return nil, nil, nil, config.ErrIncompatibleVersion
 	}
 
 	p = &config.ArgonParams{}

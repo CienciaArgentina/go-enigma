@@ -3,7 +3,6 @@ package register
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/config"
 	"golang.org/x/crypto/argon2"
@@ -15,19 +14,7 @@ import (
 )
 
 // The following errors will be returned to the user
-var (
-	errEmptyUsername                  = errors.New("El nombre de usuario no puede estar vacío")
-	errEmptyEmail                     = errors.New("El email no puede estar vacío")
-	errEmptyPassword                  = errors.New("El campo de contraseña no puede estar vacío")
-	errPwDoesNotContainsUppercase     = errors.New("La contraseña debe contener al menos un caracter en mayúscula")
-	errPwDoesNotContainsLowercase     = errors.New("La contraseña debe contener al menos un caracter en minúscula")
-	errPwContainsSpace                = errors.New("La contraseña no puede poseer el caracter de espacio")
-	errPwDoesNotContainsNonAlphaChars = errors.New("La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)")
-	errPwDoesNotContainsADigit        = errors.New("La contraseña debe poseer al menos 1 dígito")
-	errUsernameCotainsIlegalChars     = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
-	errEmailAlreadyRegistered         = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
-	errInvalidEmail                   = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
-)
+var ()
 
 type RegisterOptions struct {
 	UserOptions struct {
@@ -151,15 +138,15 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	var errs []error
 	// Check that every field is correct
 	if u.Username == "" {
-		return false, append(errs, errEmptyUsername)
+		return false, append(errs, config.ErrEmptyUsername)
 	}
 
 	if u.Password == "" {
-		return false, append(errs, errEmptyPassword)
+		return false, append(errs, config.ErrEmptyPassword)
 	}
 
 	if u.Email == "" {
-		return false, append(errs, errEmptyEmail)
+		return false, append(errs, config.ErrEmptyEmail)
 	}
 
 	validEmail, err := regexp.Match("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
@@ -168,7 +155,7 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 		return false, append(errs, err)
 	}
 	if !validEmail {
-		return false, append(errs, errInvalidEmail)
+		return false, append(errs, config.ErrInvalidEmail)
 	}
 
 	if rs.registerOptions.UserOptions.RequireUniqueEmail {
@@ -178,17 +165,17 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 		}
 
 		if exists {
-			return false, append(errs, errEmailAlreadyRegistered)
+			return false, append(errs, config.ErrEmailAlreadyRegistered)
 		}
 	}
 
 	usernameMatch, _ := regexp.Match(rs.registerOptions.UserOptions.AllowedCharacters, []byte(u.Username))
 	if usernameMatch {
-		errs = append(errs, errUsernameCotainsIlegalChars)
+		errs = append(errs, config.ErrUsernameCotainsIlegalChars)
 	}
 
 	if strings.Contains(u.Password, " ") {
-		errs = append(errs, errPwContainsSpace)
+		errs = append(errs, config.ErrPwContainsSpace)
 	}
 
 	// Password checks
@@ -199,14 +186,14 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	if rs.registerOptions.PasswordOptions.RequireUppercase {
 		match, _ := regexp.Match(".*[A-Z].*", []byte(u.Password))
 		if !match {
-			errs = append(errs, errPwDoesNotContainsUppercase)
+			errs = append(errs, config.ErrPwDoesNotContainsUppercase)
 		}
 	}
 
 	if rs.registerOptions.PasswordOptions.RequireLowercase {
 		match, _ := regexp.Match(".*[a-z].*", []byte(u.Password))
 		if !match {
-			errs = append(errs, errPwDoesNotContainsLowercase)
+			errs = append(errs, config.ErrPwDoesNotContainsLowercase)
 		}
 	}
 
@@ -214,14 +201,14 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	if rs.registerOptions.PasswordOptions.RequireNonAlphanumeric {
 		match, _ := regexp.Match(".*[~!@#$%^&*()-+=?/<>|{}_:;.,].*", []byte(u.Password))
 		if !match {
-			errs = append(errs, errPwDoesNotContainsNonAlphaChars)
+			errs = append(errs, config.ErrPwDoesNotContainsNonAlphaChars)
 		}
 	}
 
 	if rs.registerOptions.PasswordOptions.RequireDigit {
 		match, _ := regexp.Match(".*\\d.*", []byte(u.Password))
 		if !match {
-			errs = append(errs, errPwDoesNotContainsADigit)
+			errs = append(errs, config.ErrPwDoesNotContainsADigit)
 		}
 	}
 

@@ -1,4 +1,4 @@
-package login
+package recovery
 
 import (
 	"database/sql"

@@ -7,16 +7,16 @@ import (
 
 var (
 	Router       *gin.Engine
-	errEmptyBody = errors.New("El cuerpo del mensaje no puede estar vacío")
+	errEmptyBody = errors.New("El cuerpo del request no puede estar vacío")
 )
 
-func InitRouter(h *healthController, ur *registerController, l *loginController) *gin.Engine {
+func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController) *gin.Engine {
 	r := gin.Default()
-	MapRoutes(r, h, ur, l)
+	MapRoutes(r, h, ur, l, rc)
 	return r
 }
 
-func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController) {
+func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController, rc *recoveryController) {
 	// Health
 	health := r.Group("/")
 	{
@@ -27,5 +27,6 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *lo
 	{
 		user.POST("/", ur.SignUp)
 		user.POST("/login", l.Login)
+		user.GET("/sendconfirmationemail/:userId", rc.SendConfirmationEmail)
 	}
 }

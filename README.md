@@ -19,5 +19,4 @@ The variables that the system need are:
 ```Bash
     export db_password="value"
     export db_hostname="value"
-    export 
 ```

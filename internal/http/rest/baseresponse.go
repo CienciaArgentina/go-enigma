@@ -32,15 +32,13 @@ func ParseErrors(errs interface{}) []*APIErrors {
 			errors = append(errors, errorList[x].Error())
 		}
 
-
-
 		for i := 0; i < len(errors); i++ {
 			tempErr := APIErrors{Detail: errors[i]}
 			parsedErrorList = append(parsedErrorList, &tempErr)
 		}
 	} else {
 		err := errs.(error)
-		parsedErrorList = append(parsedErrorList, &APIErrors{Detail:err.Error()})
+		parsedErrorList = append(parsedErrorList, &APIErrors{Detail: err.Error()})
 	}
 
 	return parsedErrorList
