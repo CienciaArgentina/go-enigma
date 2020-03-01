@@ -15,8 +15,8 @@ func NewRegisterRepository(db *sqlx.DB) register.Repository {
 }
 
 func (r *registerRepository) AddUser(u *register.User) (int64, error) {
-	res, err := r.db.Exec("INSERT INTO users (`username`, `normalized_username`, `password_hash`, `lockout_enabled`,  "+
-		"`date_created`, `verification_token`) VALUES ($1, $2, $3, $4, $5, $6)", u.Username, u.NormalizedUsername, u.PasswordHash, u.LockoutEnabled, u.DateCreated, u.VerificationToken)
+	res, err := r.db.Exec("INSERT INTO users (username, normalized_username, password_hash,  date_created, verification_token) VALUES (?, ?, ?, now(), ?)",
+		u.Username, u.NormalizedUsername, u.PasswordHash, u.VerificationToken)
 
 	if err != nil {
 		return 0, err
@@ -32,7 +32,7 @@ func (r *registerRepository) AddUser(u *register.User) (int64, error) {
 }
 
 func (r *registerRepository) AddEmail(e *register.UserEmail) (int64, error) {
-	res, err := r.db.Exec("INSERT INTO users_email (`user_id`, `email`, `normalized_email`, `date_created`) VALUES ($1, $2, $3, $4)", e.UserId, e.Email, e.NormalizedEmail,
+	res, err := r.db.Exec("INSERT INTO users_email (user_id, email, normalized_email, date_created) VALUES (?, ?, ?, ?)", e.UserId, e.Email, e.NormalizedEmail,
 		e.DateCreated)
 	if err != nil {
 		return 0, err
@@ -49,11 +49,11 @@ func (r *registerRepository) AddEmail(e *register.UserEmail) (int64, error) {
 
 func (r *registerRepository) VerifyIfEmailExists(email string) (bool, error) {
 	normalizedemail := strings.ToUpper(email)
-	var ue register.UserEmail
-	err := r.db.Select(&ue, "SELECT * FROM users_email WHERE normalized_email = ?", normalizedemail)
+	var exists int
+	err := r.db.Get(&exists, "SELECT count(*) FROM users_email WHERE normalized_email = ?", normalizedemail)
 	if err != nil {
 		return true, err
 	}
 
-	return &ue == nil, err
+	return exists > 0, err
 }

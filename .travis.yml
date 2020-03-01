@@ -27,7 +27,6 @@ before_install:
 # in a modern Go project.
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic ./...
-  - gocyclo -over 19 $GO_FILES               # forbid code with huge functions
 
 
 after_success:

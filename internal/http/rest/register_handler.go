@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type registerController struct {
@@ -16,16 +17,21 @@ func NewRegisterController(svc register.Service) *registerController {
 }
 
 func (r *registerController) SignUp(c *gin.Context) {
-	var dto register.UserSignUpDto
+	var dto register.UserSignUp
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err.Error()))
+		if strings.Contains(err.Error(), "EOF") {
+			err = errEmptyBody
+		}
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err))
+		return
 	}
 
 	userId, errs := r.svc.SignUp(&dto)
 	if errs != nil {
-		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errs))
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errs))
+		return
 	}
 
-	c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, map[string]string{"userId": strconv.FormatInt(userId, 10)}, nil))
+	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"userId": strconv.FormatInt(userId, 10)}, nil))
 }
