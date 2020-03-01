@@ -74,3 +74,17 @@ func TestVerifyCanLoginShouldFailIfPasswordIsEmpty(t *testing.T) {
 	require.Equal(t, config.ErrEmptyPassword, err)
 	require.False(t, login)
 }
+
+func TestLoginShouldFailIfUsernameOrPasswordAreEmpty(t *testing.T) {
+	svc := CreateNewServiceWithMockedRepo()
+	var userLogin UserLogin
+
+	login, err := svc.Login(&userLogin)
+	require.Equal(t, config.ErrEmptyUsername, err)
+	require.Equal(t, "",login)
+
+	userLogin.Username = "notempty"
+	login, err = svc.Login(&userLogin)
+	require.Equal(t, config.ErrEmptyPassword, err)
+	require.Equal(t, "",login)
+}
