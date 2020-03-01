@@ -35,7 +35,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 	}
 
 	// If the email or user doesn't exist we should tell the user that an email has been sent IF the email exist. Just to preserve users privacy
-	if verificationToken == "" || userEmail == nil {
+	if verificationToken == "" || userEmail == nil || userEmail == (&UserEmail{}) {
 		return true, nil
 	}
 

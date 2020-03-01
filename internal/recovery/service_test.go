@@ -1,10 +1,15 @@
 package recovery
 
 import (
+	"errors"
 	"github.com/CienciaArgentina/go-enigma/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
+)
+
+const (
+	GetEmailByUserId = "GetEmailByUserId"
 )
 
 type RecoveryRepositoryMock struct {
@@ -32,4 +37,31 @@ func TestSendConfirmationEmailShouldReturnEmptyUserIdError(t *testing.T) {
 	sent, err := svc.SendConfirmationEmail(0)
 	require.False(t, sent)
 	require.Equal(t, config.ErrEmptyUserId, err)
+}
+
+func TestSendConfirmationEmailShouldReturnErrorWhileGettingEmail(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetEmailByUserId, int64(1)).Return("", &UserEmail{}, errors.New("Indistinct"))
+	sent, err := svc.SendConfirmationEmail(1)
+	require.Equal(t, config.ErrUnexpectedError, err)
+	require.False(t, sent)
+}
+
+func TestSendConfirmationEmailShouldReturnNoErrorIfUserEmailIsEmpty(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetEmailByUserId, int64(1)).Return("", &UserEmail{}, nil)
+	sent, err := svc.SendConfirmationEmail(1)
+	require.NoError(t, err)
+	require.True(t, sent)
+}
+
+func TestSendConfirmationEmailShouldReturnErrorIfEmailIsAlreadyVerified(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	verified := &UserEmail{
+		VerfiedEmail:     true,
+	}
+	mock.On(GetEmailByUserId, int64(1)).Return("notempty", verified, nil)
+	sent, err := svc.SendConfirmationEmail(1)
+	require.Equal(t, config.ErrEmailAlreadyVerified, err)
+	require.False(t, sent)
 }
