@@ -58,6 +58,5 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return false, config.ErrEmailSendServiceNotWorking
 	}
-
 	return true, nil
 }
