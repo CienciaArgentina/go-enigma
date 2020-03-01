@@ -62,7 +62,11 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 
 	user, userEmail, err := s.repo.GetUserByUsername(u.Username)
 	if err != nil {
-		return "", nil
+		return "", err
+	}
+
+	if user == nil || user == (&User{}) || userEmail == nil || userEmail == (&UserEmail{}) {
+		return "", config.ErrInvalidLogin
 	}
 
 	verifyPassword, err := comparePasswordAndHash(u.Password, user.PasswordHash)
