@@ -60,7 +60,7 @@ func TestSignUpShouldReturnErrorWhenUserSignUpDtoIsNil(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errEmptyUsername, errs[0])
+	require.Equal(t, config.ErrEmptyUsername, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
@@ -72,7 +72,7 @@ func TestSignUpShouldReturnErrorWhenUsernameIsEmpty(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errEmptyUsername, errs[0])
+	require.Equal(t, config.ErrEmptyUsername, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
@@ -85,7 +85,7 @@ func TestSignUpShouldReturnErrorWhenPasswordIsEmpty(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errEmptyPassword, errs[0])
+	require.Equal(t, config.ErrEmptyPassword, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
@@ -99,7 +99,7 @@ func TestSignUpShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errEmptyEmail, errs[0])
+	require.Equal(t, config.ErrEmptyEmail, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenEmailFormatIsInvalid(t *testing.T) {
@@ -113,7 +113,7 @@ func TestSignUpShouldReturnErrorWhenEmailFormatIsInvalid(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errInvalidEmail, errs[0])
+	require.Equal(t, config.ErrInvalidEmail, errs[0])
 }
 
 func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
@@ -128,7 +128,7 @@ func TestSignUpShouldReturnTrueWhenEmailAlreadyExistsEmpty(t *testing.T) {
 
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errEmailAlreadyRegistered, errs[0])
+	require.Equal(t, config.ErrEmailAlreadyRegistered, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenEmailCheckFails(t *testing.T) {
@@ -157,7 +157,7 @@ func TestSignUpShouldReturnErrorWhenUsingAnInvalidCharInUsername(t *testing.T) {
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errUsernameCotainsIlegalChars, errs[0])
+	require.Equal(t, config.ErrUsernameCotainsIlegalChars, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
@@ -171,7 +171,7 @@ func TestSignUpShouldReturnErrorWhenPasswordContainsSpace(t *testing.T) {
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errPwContainsSpace, errs[0])
+	require.Equal(t, config.ErrPwContainsSpace, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordContainsLessThan8Chars(t *testing.T) {
@@ -199,7 +199,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsUppercase(t *testing.
 	repoMock.On(VerifyIfEmailExists, u.Email).Return(false, nil)
 	_, errs := srv.SignUp(&u)
 
-	require.Equal(t, errPwDoesNotContainsUppercase, errs[0])
+	require.Equal(t, config.ErrPwDoesNotContainsUppercase, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.T) {
@@ -214,7 +214,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsLowercase(t *testing.
 	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
-	require.Equal(t, errPwDoesNotContainsLowercase, errs[0])
+	require.Equal(t, config.ErrPwDoesNotContainsLowercase, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t *testing.T) {
@@ -229,7 +229,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsNonAlphanumericChar(t
 	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
-	require.Equal(t, errPwDoesNotContainsNonAlphaChars, errs[0])
+	require.Equal(t, config.ErrPwDoesNotContainsNonAlphaChars, errs[0])
 }
 
 func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) {
@@ -244,7 +244,7 @@ func TestSignUpShouldReturnErrorWhenPasswordDoesNotContainsADigit(t *testing.T) 
 	_, errs := srv.SignUp(&u)
 
 	require.Len(t, errs, 1)
-	require.Equal(t, errPwDoesNotContainsADigit, errs[0])
+	require.Equal(t, config.ErrPwDoesNotContainsADigit, errs[0])
 }
 
 func TestSignUpShouldReturnErrorIfAddUserFails(t *testing.T) {
