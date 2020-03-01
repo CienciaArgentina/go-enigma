@@ -14,6 +14,8 @@ type Service interface {
 	SendConfirmationEmail(userId int64) (bool, error)
 	ConfirmEmail(email string, token string) (bool, error)
 	ResendEmailConfirmationEmail(email string) (bool, error)
+	SendUsername(email string) (bool, error)
+	SendRecoveryEmail(dto *commons.DTO) (bool, error)
 }
 
 type recoveryService struct {
@@ -50,16 +52,11 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	jsonBody, err := json.Marshal(emailDto)
-	if err != nil {
-		return false, config.ErrUnexpectedError
+	sent, err := r.SendRecoveryEmail(emailDto)
+	if err != nil || !sent {
+		return sent, err
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s%s", r.cfg.EmailSenderAddr, r.cfg.EmailSenderEndpoints.SendEmail), "application/json", bytes.NewBuffer(jsonBody))
-
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return false, config.ErrEmailSendServiceNotWorking
-	}
 	return true, nil
 }
 
@@ -78,7 +75,7 @@ func (r *recoveryService) ConfirmEmail(email string, token string) (bool, error)
 
 func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, error) {
 	if email == "" {
-		return false, config.ErrEmailValidationFailed
+		return false, config.ErrEmptyEmail
 	}
 
 	userId, err := r.repo.GetuserIdByEmail(email)
@@ -92,4 +89,38 @@ func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, erro
 	}
 
 	return sent, nil
+}
+
+func (r *recoveryService) SendUsername(email string) (bool, error) {
+	if email == "" {
+		return false, config.ErrEmptyEmail
+	}
+
+	username, err := r.repo.GetUsernameByEmail(email)
+	if err != nil {
+		return false, err
+	}
+
+	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
+
+	sent, err := r.SendRecoveryEmail(emailDto)
+	if err != nil || !sent {
+		return sent, err
+	}
+
+	return sent, nil
+}
+
+func (r *recoveryService) SendRecoveryEmail(dto *commons.DTO) (bool, error) {
+	jsonBody, err := json.Marshal(dto)
+	if err != nil {
+		return false, config.ErrUnexpectedError
+	}
+
+	resp, err := http.Post(fmt.Sprintf("%s%s", r.cfg.EmailSenderAddr, r.cfg.EmailSenderEndpoints.SendEmail), "application/json", bytes.NewBuffer(jsonBody))
+
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return false, config.ErrEmailSendServiceNotWorking
+	}
+	return true, nil
 }

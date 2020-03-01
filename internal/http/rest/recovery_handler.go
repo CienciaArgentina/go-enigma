@@ -73,3 +73,20 @@ func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"sentEmail": strconv.FormatBool(sent)}, nil))
 }
+
+func (r *recoveryController) ForgotUsername(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody))
+		return
+	}
+
+	var err error
+	sent, err := r.svc.SendUsername(email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, map[string]string{"sentEmail": strconv.FormatBool(sent)}, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"sentEmail": strconv.FormatBool(sent)}, nil))
+}

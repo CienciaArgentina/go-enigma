@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	GetEmailByUserId = "GetEmailByUserId"
-	ConfirmUserEmail = "ConfirmUserEmail"
-	GetuserIdByEmail = "GetuserIdByEmail"
+	GetEmailByUserId   = "GetEmailByUserId"
+	ConfirmUserEmail   = "ConfirmUserEmail"
+	GetuserIdByEmail   = "GetuserIdByEmail"
+	GetUsernameByEmail = "GetUsernameByEmail"
 )
 
 type RecoveryRepositoryMock struct {
@@ -30,7 +31,12 @@ func (r *RecoveryRepositoryMock) ConfirmUserEmail(email string, token string) er
 
 func (r *RecoveryRepositoryMock) GetuserIdByEmail(email string) (int64, error) {
 	args := r.Called(email)
-	return args.Get(0).(int64) ,args.Error(1)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) GetUsernameByEmail(email string) (string, error) {
+	args := r.Called(email)
+	return args.Get(0).(string), args.Error(1)
 }
 
 func GetServiceAndMock() (Service, *RecoveryRepositoryMock) {

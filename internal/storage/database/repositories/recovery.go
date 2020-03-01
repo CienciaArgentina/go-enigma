@@ -89,3 +89,20 @@ func (r *recoveryRepository) GetuserIdByEmail(email string) (int64, error) {
 
 	return userId, nil
 }
+
+func (r *recoveryRepository) GetUsernameByEmail(email string) (string, error) {
+	var userId int64
+
+	err := r.db.Get(&userId, "SELECT user_id FROM users_email WHERE email = ?", email)
+	if err != nil {
+		return "", nil
+	}
+
+	var username string
+	err = r.db.Get(&username, "SELECT username FROM users where user_id = ?", userId)
+	if err != nil {
+		return "", nil
+	}
+
+	return username, nil
+}
