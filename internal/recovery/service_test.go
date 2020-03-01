@@ -142,3 +142,27 @@ func TestResendEmailConfirmationEmailShouldReturnErrorWhenSendConfirmationEmailF
 	require.False(t, sent)
 	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
 }
+
+func TestSendUsernameShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+
+	sent, err := svc.SendUsername("")
+	require.Equal(t, config.ErrEmptyEmail, err)
+	require.False(t, sent)
+}
+
+func TestSendUsernameShouldReturnErrorWhenGetUsernameFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetUsernameByEmail, "asd").Return("", errors.New("Indistinct"))
+	sent, err := svc.SendUsername("asd")
+	require.Equal(t, "Indistinct", err.Error())
+	require.False(t, sent)
+}
+
+func TestSendUsernameShouldReturnErrorWhenEmailSenderFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetUsernameByEmail, "asd").Return("juan", nil)
+	sent, err := svc.SendUsername("asd")
+	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
+	require.False(t, sent)
+}
