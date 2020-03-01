@@ -120,7 +120,7 @@ func TestResendEmailConfirmationEmailShouldReturnErrorWhenEmailisNil(t *testing.
 	svc, _ := GetServiceAndMock()
 	sent, err := svc.ResendEmailConfirmationEmail("")
 	require.False(t, sent)
-	require.Equal(t, config.ErrEmailValidationFailed, err)
+	require.Equal(t, config.ErrEmptyEmail, err)
 }
 
 func TestResendEmailConfirmationEmailShouldReturnErrorWhenGetUserIdByEmailFails(t *testing.T) {
