@@ -12,6 +12,7 @@ import (
 
 type Service interface {
 	SendConfirmationEmail(userId int64) (bool, error)
+	ConfirmEmail(email string, token string) (bool, error)
 }
 
 type recoveryService struct {
@@ -58,5 +59,18 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return false, config.ErrEmailSendServiceNotWorking
 	}
+	return true, nil
+}
+
+func (r *recoveryService) ConfirmEmail(email string, token string) (bool, error) {
+	if email == "" || token == "" {
+		return false, config.ErrEmailValidationFailed
+	}
+
+	err := r.repo.ConfirmUserEmail(email, token)
+	if err != nil {
+		return false, err
+	}
+
 	return true, nil
 }

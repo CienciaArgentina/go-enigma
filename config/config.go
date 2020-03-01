@@ -41,6 +41,8 @@ var (
 	ErrUnexpectedError                = errors.New("Ocurrió un error en el sistema")
 	ErrEmailAlreadyVerified           = errors.New("El mail ya se encuentra confirmado")
 	ErrEmailSendServiceNotWorking     = errors.New("Por alguna razón el servicio de envío de emails falló")
+	ErrEmailValidationFailed = errors.New("La validación del email falló por algún campo vacío")
+	ErrValidationTokenFailed = errors.New("La validación del token falló")
 )
 
 type Configuration struct {
