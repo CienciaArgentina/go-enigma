@@ -54,10 +54,10 @@ type Configuration struct {
 
 type Database struct {
 	Username string `yaml:"db_username"`
-	Password string `envconfig:"env_db_password"`
-	Hostname string `envconfig:"env_db_hostname"`
+	Password string `envconfig:"ENV_DB_PASSWORD"`
+	Hostname string `envconfig:"ENV_DB_HOSTNAME"`
 	Port     string `yaml:"db_port"`
-	Database string `envconfig:"env_db_name"`
+	Database string `envconfig:"ENV_DB_NAME"`
 }
 
 type Server struct {
@@ -122,7 +122,7 @@ func New() *Configuration {
 		scope = Development
 	}
 
-	data, err := os.Open(fmt.Sprintf("./config/config.%s.yml", scope))
+	data, err := os.Open(fmt.Sprintf("../../config/config.%s.yml", scope))
 	if err != nil {
 		return DefaultConfiguration()
 	}

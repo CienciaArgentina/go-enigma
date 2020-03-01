@@ -31,7 +31,7 @@ func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
 
 	sent, err := r.svc.SendConfirmationEmail(parsedUserId)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err))
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, map[string]string{"sentEmail": strconv.FormatBool(sent)}, err))
 		return
 	}
 
@@ -57,3 +57,19 @@ func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"confirmed": strconv.FormatBool(confirmed)}, nil))
 }
 
+func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody))
+		return
+	}
+
+	var err error
+	sent, err := r.svc.ResendEmailConfirmationEmail(email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, map[string]string{"sentEmail": strconv.FormatBool(sent)}, err))
+		return
+	}
+
+	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"sentEmail": strconv.FormatBool(sent)}, nil))
+}

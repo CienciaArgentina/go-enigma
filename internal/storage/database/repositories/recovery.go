@@ -78,3 +78,14 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) error 
 
 	return nil
 }
+
+func (r *recoveryRepository) GetuserIdByEmail(email string) (int64, error) {
+	var userId int64
+
+	err := r.db.Get(&userId, "SELECT user_id FROM users_email where email = ?", email)
+	if err != nil {
+		return 0, err
+	}
+
+	return userId, nil
+}
