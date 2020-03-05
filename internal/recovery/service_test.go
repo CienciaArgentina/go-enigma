@@ -13,6 +13,7 @@ const (
 	ConfirmUserEmail   = "ConfirmUserEmail"
 	GetuserIdByEmail   = "GetuserIdByEmail"
 	GetUsernameByEmail = "GetUsernameByEmail"
+	GetSecurityToken = "GetSecurityToken"
 )
 
 type RecoveryRepositoryMock struct {
@@ -178,6 +179,29 @@ func TestSendUsernameShouldReturnErrorWhenEmailSenderFails(t *testing.T) {
 	svc, mock := GetServiceAndMock()
 	mock.On(GetUsernameByEmail, "asd").Return("juan", nil)
 	sent, err := svc.SendUsername("asd")
+	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldReturnErrWhenEmailIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.SendPasswordReset("")
+	require.Equal(t, config.ErrEmptyEmail, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldReturnErrWhenSecurityTokenFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("", config.ErrEmptySearch)
+	sent, err := svc.SendPasswordReset("asd")
+	require.Equal(t, config.ErrEmptySearch, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldFailWhenTryingToDoApiCall(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("a", nil)
+	sent, err := svc.SendPasswordReset("asd")
 	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
 	require.False(t, sent)
 }
