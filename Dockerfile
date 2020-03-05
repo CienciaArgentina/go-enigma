@@ -14,9 +14,7 @@ RUN go get github.com/golang/dep/cmd/dep
 WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
 COPY . /go/src/github.com/CienciaArgentina/go-enigma/
 
-COPY go.mod .
-COPY go.sum .
-
+COPY go.mod go.sum ./
 # Get dependancies - will also be cached if we won't change mod/sum
 RUN go mod download
 # COPY the source code as the last step
