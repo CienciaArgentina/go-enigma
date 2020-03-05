@@ -37,7 +37,7 @@ func (r *RegisterRepositoryMock) AddEmail(e *UserEmail) (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (r *RegisterRepositoryMock) VerifyIfUserExists(email string) (bool, error) {
+func (r *RegisterRepositoryMock) VerifyIfUserExists(email, username string) (bool, error) {
 	args := r.Called(email)
 	return args.Get(0).(bool), args.Error(1)
 }

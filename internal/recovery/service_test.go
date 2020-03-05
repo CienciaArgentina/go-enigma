@@ -44,8 +44,13 @@ func (r *RecoveryRepositoryMock) GetSecurityToken(email string) (string, error) 
 	return args.Get(0).(string), args.Error(1)
 }
 
-func (r *RecoveryRepositoryMock) UpdatePasswordHash(userId int64, passwordHash, newSecurityToken string) (bool, error) {
-	args := r.Called(userId, passwordHash, newSecurityToken)
+func (r *RecoveryRepositoryMock) UpdatePasswordHash(userId int64, passwordHash  string) (bool, error) {
+	args := r.Called(userId, passwordHash)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) UpdateSecurityToken(userId int64, newSecurityToken string) (bool, error) {
+	args := r.Called(userId, newSecurityToken)
 	return args.Get(0).(bool), args.Error(1)
 }
 

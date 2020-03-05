@@ -90,9 +90,9 @@ func ReturnFullUserEmail() *UserEmail {
 		Email:            "asd@asd.com",
 		NormalizedEmail:  "ASD@ASD.COM",
 		VerfiedEmail:     false,
-		VerificationDate: nil,
+		VerificationDate: mysql.NullTime{},
 		DateCreated:      "",
-		DateDeleted:      sql.NullTime{},
+		DateDeleted:      mysql.NullTime{},
 	}
 }
 
