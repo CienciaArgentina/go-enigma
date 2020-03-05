@@ -205,3 +205,33 @@ func TestSendPasswordResetShouldFailWhenTryingToDoApiCall(t *testing.T) {
 	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
 	require.False(t, sent)
 }
+
+func TestResetPassWordShouldReturnErrorWhenFieldIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.ResetPassword("", "", "", "")
+	require.Equal(t, config.ErrEmptyField, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenPasswordDontMatch(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.ResetPassword("asd", "a", "b", "asd")
+	require.Equal(t, config.ErrPasswordConfirmationDoesntMatch, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenTokenFetchFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("", config.ErrEmptySearch)
+	sent, err := svc.ResetPassword("asd", "a", "a", "asd")
+	require.Equal(t, config.ErrEmptySearch, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenTokensDontMatch(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("aa", nil)
+	sent, err := svc.ResetPassword("asd", "a", "a", "bb")
+	require.Equal(t, config.ErrPasswordTokenIsNotValid, err)
+	require.False(t, sent)
+}
