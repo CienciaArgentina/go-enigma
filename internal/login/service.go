@@ -126,6 +126,7 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 		"userId": user.UserId,
 		"email":  userEmail.Email,
 		//"role":   role,
+		"timestamp": time.Now().Unix(),
 	})
 
 	jwtString, _ := jwt.SignedString([]byte(s.config.Keys.PasswordHashingKey))
