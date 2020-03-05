@@ -22,16 +22,16 @@ func (l *loginController) Login(c *gin.Context) {
 		if strings.Contains(err.Error(), "EOF") {
 			err = errEmptyBody
 		}
-		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err))
+		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
 		return
 	}
 
 	jwt, err := l.svc.Login(&dto)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err))
+		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
 		return
 	}
 
-	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"jwt": jwt}, nil))
+	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, map[string]string{"jwt": jwt}, nil, jwt != "" && len(jwt) > 0))
 	return
 }

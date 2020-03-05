@@ -3,7 +3,7 @@ module github.com/CienciaArgentina/go-enigma
 go 1.13
 
 require (
-	github.com/CienciaArgentina/go-email-sender v0.0.0-20200301063841-dee5d36d402c
+	github.com/CienciaArgentina/go-email-sender v0.0.0-20200303023941-5019d948d2c1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-sql-driver/mysql v1.5.0

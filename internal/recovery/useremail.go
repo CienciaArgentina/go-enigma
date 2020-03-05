@@ -1,8 +1,7 @@
 package recovery
 
 import (
-	"database/sql"
-	"time"
+	"github.com/go-sql-driver/mysql"
 )
 
 type UserEmail struct {
@@ -11,7 +10,7 @@ type UserEmail struct {
 	Email            string       `json:"email" db:"email"`
 	NormalizedEmail  string       `json:"normalized_email" db:"normalized_email"`
 	VerfiedEmail     bool         `json:"verified_email" db:"verified_email"`
-	VerificationDate *time.Time   `json:"verfication_date" db:"verification_date"`
+	VerificationDate mysql.NullTime   `json:"verfication_date" db:"verification_date"`
 	DateCreated      string       `json:"date_created" db:"date_created"`
-	DateDeleted      sql.NullTime `json:"date_deleted" db:"date_deleted"`
+	DateDeleted      mysql.NullTime `json:"date_deleted" db:"date_deleted"`
 }

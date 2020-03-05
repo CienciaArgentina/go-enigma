@@ -39,6 +39,16 @@ func (r *RecoveryRepositoryMock) GetUsernameByEmail(email string) (string, error
 	return args.Get(0).(string), args.Error(1)
 }
 
+func (r *RecoveryRepositoryMock) GetSecurityToken(email string) (string, error) {
+	args := r.Called(email)
+	return args.Get(0).(string), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) UpdatePasswordAndResetSecurityToken(userId int64, passwordHash, newSecurityToken string) (bool, error) {
+	args := r.Called(userId, passwordHash, newSecurityToken)
+	return args.Get(0).(bool), args.Error(1)
+}
+
 func GetServiceAndMock() (Service, *RecoveryRepositoryMock) {
 	mock := new(RecoveryRepositoryMock)
 	svc := NewService(mock, config.New())

@@ -20,29 +20,34 @@ const (
 var (
 	Config *Configuration
 
-	errNotEvenDefaultConfiguration    = fmt.Errorf("No es posible generar configuración default ya que el scope es %s", os.Getenv(Scope))
-	ErrInvalidLogin                   = errors.New("El usuario o la contraseña especificados no existe")
-	ErrInvalidHash                    = errors.New("El hash no usa el encoding correcto")
-	ErrIncompatibleVersion            = errors.New("Versión de argon2 incompatible")
-	ErrThroughLogin                   = errors.New("Ocurrió un error al momento de loguear")
-	ErrEmailNotVerified               = errors.New("Tu dirección de email no fue verificada aún")
-	ErrEmptyUsername                  = errors.New("El nombre de usuario no puede estar vacío")
-	ErrEmptyUserId                    = errors.New("El userId no puede estar vacío")
-	ErrEmptyEmail                     = errors.New("El email no puede estar vacío")
-	ErrEmptyPassword                  = errors.New("El campo de contraseña no puede estar vacío")
-	ErrPwDoesNotContainsUppercase     = errors.New("La contraseña debe contener al menos un caracter en mayúscula")
-	ErrPwDoesNotContainsLowercase     = errors.New("La contraseña debe contener al menos un caracter en minúscula")
-	ErrPwContainsSpace                = errors.New("La contraseña no puede poseer el caracter de espacio")
-	ErrPwDoesNotContainsNonAlphaChars = errors.New("La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)")
-	ErrPwDoesNotContainsADigit        = errors.New("La contraseña debe poseer al menos 1 dígito")
-	ErrUsernameCotainsIlegalChars     = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
-	ErrEmailAlreadyRegistered         = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
-	ErrInvalidEmail                   = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
-	ErrUnexpectedError                = errors.New("Ocurrió un error en el sistema")
-	ErrEmailAlreadyVerified           = errors.New("El mail ya se encuentra confirmado")
-	ErrEmailSendServiceNotWorking     = errors.New("Por alguna razón el servicio de envío de emails falló")
-	ErrEmailValidationFailed          = errors.New("La validación del email falló por algún campo vacío")
-	ErrValidationTokenFailed          = errors.New("La validación del token falló")
+	errNotEvenDefaultConfiguration     = fmt.Errorf("No es posible generar configuración default ya que el scope es %s", os.Getenv(Scope))
+	ErrInvalidLogin                    = errors.New("El usuario o la contraseña especificados no existe")
+	ErrInvalidHash                     = errors.New("El hash no usa el encoding correcto")
+	ErrIncompatibleVersion             = errors.New("Versión de argon2 incompatible")
+	ErrThroughLogin                    = errors.New("Ocurrió un error al momento de loguear")
+	ErrEmailNotVerified                = errors.New("Tu dirección de email no fue verificada aún")
+	ErrEmptyUsername                   = errors.New("El nombre de usuario no puede estar vacío")
+	ErrEmptyUserId                     = errors.New("El userId no puede estar vacío")
+	ErrEmptyEmail                      = errors.New("El email no puede estar vacío")
+	ErrEmptyPassword                   = errors.New("El campo de contraseña no puede estar vacío")
+	ErrPwDoesNotContainsUppercase      = errors.New("La contraseña debe contener al menos un caracter en mayúscula")
+	ErrPwDoesNotContainsLowercase      = errors.New("La contraseña debe contener al menos un caracter en minúscula")
+	ErrPwContainsSpace                 = errors.New("La contraseña no puede poseer el caracter de espacio")
+	ErrPwDoesNotContainsNonAlphaChars  = errors.New("La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)")
+	ErrPwDoesNotContainsADigit         = errors.New("La contraseña debe poseer al menos 1 dígito")
+	ErrUsernameCotainsIlegalChars      = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
+	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
+	ErrUsernameAlreadyRegistered = errors.New("Este nombre de usuario ya se encuentra registrado")
+	ErrInvalidEmail                    = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
+	ErrUnexpectedError                 = errors.New("Ocurrió un error en el sistema")
+	ErrEmailAlreadyVerified            = errors.New("El mail ya se encuentra confirmado")
+	ErrEmailSendServiceNotWorking      = errors.New("Por alguna razón el servicio de envío de emails falló")
+	ErrEmailValidationFailed           = errors.New("La validación del email falló por algún campo vacío")
+	ErrEmptyField                      = errors.New("Hay algún campo vacío y no puede estarlo")
+	ErrValidationTokenFailed           = errors.New("La validación del token falló")
+	ErrPasswordConfirmationDoesntMatch = errors.New("Los passwords ingresados no son idénticos")
+	ErrPasswordTokenIsNotValid         = errors.New("El token para resetear la contraseña no es válido")
+	ErrEmptySearch                     = errors.New("La búsqueda no arrojó ningún resultado")
 )
 
 type Configuration struct {
@@ -76,6 +81,7 @@ type Microservices struct {
 		SignUp                string `yaml:"sign_up"`
 		SendConfirmationEmail string `yaml:"send_confirmation_email"`
 		ConfirmEmail          string `yaml:"confirm_email"`
+		SendPasswordReset     string `yaml:"send_password_reset"`
 	} `yaml:"user_endpoints"`
 	EmailSenderAddr      string `yaml:"email_sender_addr"`
 	EmailSenderEndpoints struct {

@@ -4,13 +4,14 @@ type BaseResponse struct {
 	Data   interface{}  `json:"data"`
 	Error  []*APIErrors `json:"error"`
 	Status int          `json:"status"`
+	Success bool `json:"success"`
 }
 
 type APIErrors struct {
 	Detail string `json:"detail"`
 }
 
-func NewBaseResponse(status int, data interface{}, error interface{}) *BaseResponse {
+func NewBaseResponse(status int, data interface{}, error interface{}, success bool) *BaseResponse {
 	var errs []*APIErrors
 	if error != nil {
 		errs = ParseErrors(error)
@@ -20,6 +21,7 @@ func NewBaseResponse(status int, data interface{}, error interface{}) *BaseRespo
 		Data:   data,
 		Error:  errs,
 		Status: status,
+		Success: success,
 	}
 }
 

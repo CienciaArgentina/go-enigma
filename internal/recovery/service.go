@@ -7,6 +7,7 @@ import (
 	"github.com/CienciaArgentina/go-email-sender/commons"
 	"github.com/CienciaArgentina/go-email-sender/defines"
 	"github.com/CienciaArgentina/go-enigma/config"
+	"github.com/CienciaArgentina/go-enigma/internal/encryption"
 	"net/http"
 )
 
@@ -15,7 +16,9 @@ type Service interface {
 	ConfirmEmail(email string, token string) (bool, error)
 	ResendEmailConfirmationEmail(email string) (bool, error)
 	SendUsername(email string) (bool, error)
+	SendPasswordReset(email string) (bool, error)
 	SendRecoveryEmail(dto *commons.DTO) (bool, error)
+	ResetPassword(email, password, confirmPassword, token string) (bool, error)
 }
 
 type recoveryService struct {
@@ -109,6 +112,71 @@ func (r *recoveryService) SendUsername(email string) (bool, error) {
 	}
 
 	return sent, nil
+}
+
+func (r *recoveryService) SendPasswordReset(email string) (bool, error) {
+	if email == "" {
+		return false, config.ErrEmptyEmail
+	}
+
+	securityToken, err := r.repo.GetSecurityToken(email)
+	if err != nil {
+		return false, err
+	}
+
+	url := fmt.Sprintf("%s%s%s?email=%s&token=%s", r.cfg.Microservices.BaseUrl, r.cfg.Microservices.UsersEndpoints.BaseResource, r.cfg.UsersEndpoints.SendPasswordReset,
+		email, securityToken)
+
+	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
+
+	sent, err := r.SendRecoveryEmail(emailDto)
+	if err != nil || !sent {
+		return sent, err
+	}
+
+	return sent, nil
+}
+
+func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, error) {
+	if email == "" || password == "" || confirmPassword == "" || token == "" {
+		return false, config.ErrEmptyField
+	}
+
+	if password != confirmPassword {
+		return false, config.ErrPasswordConfirmationDoesntMatch
+	}
+
+	securityToken, err := r.repo.GetSecurityToken(email)
+	if err != nil {
+		return false, err
+	}
+
+	if token != securityToken {
+		return false, config.ErrPasswordTokenIsNotValid
+	}
+
+	newHashedPassword, err := encryption.GenerateEncodedHash(password)
+	if err != nil {
+		return false, err
+	}
+
+	newSecurityToken := encryption.GenerateSecurityToken(password, r.cfg)
+
+	userId, err := r.repo.GetuserIdByEmail(email)
+	if err != nil {
+		return false, err
+	}
+
+	updated, err := r.repo.UpdatePasswordAndResetSecurityToken(userId, newHashedPassword, newSecurityToken)
+	if err != nil {
+		return false, err
+	}
+
+	if updated {
+
+	}
+
+	return updated, nil
 }
 
 func (r *recoveryService) SendRecoveryEmail(dto *commons.DTO) (bool, error) {

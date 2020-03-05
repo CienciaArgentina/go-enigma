@@ -1,16 +1,13 @@
 package register
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/config"
-	"golang.org/x/crypto/argon2"
+	"github.com/CienciaArgentina/go-enigma/internal/encryption"
+
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 // The following errors will be returned to the user
@@ -43,7 +40,6 @@ type RegisterOptions struct {
 
 type Service interface {
 	SignUp(u *UserSignUp) (int64, []error)
-	GenerateVerificationToken(email string) string
 }
 
 type registerService struct {
@@ -88,11 +84,12 @@ func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 		Username:           u.Username,
 		NormalizedUsername: strings.ToUpper(u.Username),
 		DateCreated:        time.Now(),
-		VerificationToken:  rs.GenerateVerificationToken(u.Email),
+		VerificationToken:  encryption.GenerateVerificationToken(u.Email, rs.registerOptions.UserOptions.EmailVerificationExpiryDuration, rs.config),
+		SecurityToken:      encryption.GenerateSecurityToken(u.Password, rs.config),
 	}
 
 	var err error
-	user.PasswordHash, err = GenerateEncodedHash(u.Password)
+	user.PasswordHash, err = encryption.GenerateEncodedHash(u.Password)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -120,20 +117,6 @@ func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 	return userId, nil
 }
 
-func (rs *registerService) GenerateVerificationToken(email string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":      email,
-		"expiryDate": time.Now().Add(rs.registerOptions.UserOptions.EmailVerificationExpiryDuration).Unix(),
-		"timestamp":  time.Now().Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(rs.config.Keys.PasswordHashingKey))
-	if err != nil {
-		// TODO: log this
-	}
-	return tokenString
-}
-
 func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []error) {
 	var errs []error
 	// Check that every field is correct
@@ -159,7 +142,7 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	}
 
 	if rs.registerOptions.UserOptions.RequireUniqueEmail {
-		exists, err := rs.repository.VerifyIfEmailExists(u.Email)
+		exists, err := rs.repository.VerifyIfUserExists(u.Email, u.Username)
 		if err != nil {
 			return false, append(errs, err)
 		}
@@ -217,52 +200,4 @@ func (rs *registerService) userSignUpDtoCanRegister(u *UserSignUp) (bool, []erro
 	}
 
 	return true, nil
-}
-
-func generateFromPassword(password string, p *config.ArgonParams) (string, error) {
-	// Generate a cryptographically secure random salt.
-	salt, err := generateRandomBytes(p.SaltLength)
-	if err != nil {
-		return "", err
-	}
-
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
-
-	// Base64 encode the salt and hashed password.
-	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
-	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
-
-	// Return a string using the standard encoded hash representation.
-	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.Memory, p.Iterations, p.Parallelism, b64Salt, b64Hash)
-
-	return encodedHash, nil
-}
-
-func generateRandomBytes(n uint32) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-// https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go
-// For guidance and an outline process for choosing appropriate parameters see https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4.
-func GenerateEncodedHash(pw string) (string, error) {
-	p := &config.ArgonParams{
-		Memory:      128 * 1024,
-		Iterations:  4,
-		Parallelism: 4,
-		SaltLength:  32,
-		KeyLength:   32,
-	}
-
-	encodedHash, err := generateFromPassword(pw, p)
-	if err != nil {
-		return "", err
-	}
-
-	return encodedHash, nil
 }
