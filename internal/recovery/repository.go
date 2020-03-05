@@ -6,5 +6,6 @@ type Repository interface {
 	GetuserIdByEmail(email string) (int64, error)
 	GetUsernameByEmail(email string) (string, error)
 	GetSecurityToken(email string) (string, error)
-	UpdatePasswordAndResetSecurityToken(userId int64, passwordHash, newSecurityToken string) (bool, error)
+	UpdatePasswordHash(userId int64, passwordHash string) (bool, error)
+	UpdateSecurityToken(userId int64, newSecurityToken string) (bool, error)
 }

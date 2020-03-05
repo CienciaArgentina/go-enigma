@@ -133,12 +133,31 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, error) {
 	return securityToken, nil
 }
 
-func (r *recoveryRepository) UpdatePasswordAndResetSecurityToken(userId int64, passwordHash, newSecurityToken string) (bool, error) {
-	if passwordHash == "" || newSecurityToken == "" {
+func (r *recoveryRepository) UpdatePasswordHash(userId int64, passwordHash string) (bool, error) {
+	if passwordHash == "" {
 		return false, config.ErrEmptyField
 	}
 
-	result := r.db.MustExec("UPDATE users SET password_hash = ?, security_token = ? where user_id = ?", passwordHash, newSecurityToken, userId)
+	result := r.db.MustExec("UPDATE users SET password_hash = ?  where user_id = ?", passwordHash, userId)
+
+	updatedRows, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	if updatedRows == 0 {
+		return false, config.ErrUnexpectedError
+	}
+
+	return true, nil
+}
+
+func (r *recoveryRepository) UpdateSecurityToken(userId int64, newSecurityToken string) (bool, error) {
+	if newSecurityToken == "" {
+		return false, config.ErrEmptyField
+	}
+
+	result := r.db.MustExec("UPDATE users SET security_token = ? where user_id = ?", newSecurityToken, userId)
 
 	updatedRows, err := result.RowsAffected()
 	if err != nil {

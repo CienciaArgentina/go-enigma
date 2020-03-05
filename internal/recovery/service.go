@@ -17,7 +17,7 @@ type Service interface {
 	ResendEmailConfirmationEmail(email string) (bool, error)
 	SendUsername(email string) (bool, error)
 	SendPasswordReset(email string) (bool, error)
-	SendRecoveryEmail(dto *commons.DTO) (bool, error)
+	SendEmailWithApiCall(dto *commons.DTO) (bool, error)
 	ResetPassword(email, password, confirmPassword, token string) (bool, error)
 }
 
@@ -55,7 +55,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	sent, err := r.SendRecoveryEmail(emailDto)
+	sent, err := r.SendEmailWithApiCall(emailDto)
 	if err != nil || !sent {
 		return sent, err
 	}
@@ -106,7 +106,7 @@ func (r *recoveryService) SendUsername(email string) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
 
-	sent, err := r.SendRecoveryEmail(emailDto)
+	sent, err := r.SendEmailWithApiCall(emailDto)
 	if err != nil || !sent {
 		return sent, err
 	}
@@ -129,7 +129,7 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
 
-	sent, err := r.SendRecoveryEmail(emailDto)
+	sent, err := r.SendEmailWithApiCall(emailDto)
 	if err != nil || !sent {
 		return sent, err
 	}
@@ -167,19 +167,33 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 		return false, err
 	}
 
-	updated, err := r.repo.UpdatePasswordAndResetSecurityToken(userId, newHashedPassword, newSecurityToken)
+	updated, err := r.repo.UpdatePasswordHash(userId, newHashedPassword)
 	if err != nil {
 		return false, err
 	}
 
 	if updated {
+		emailDto := commons.DTO{
+			To:      []string{email},
+			Data:     nil,
+			Template: "passwordresetnotification",
+		}
 
+		_, err = r.SendEmailWithApiCall(&emailDto)
+		if err != nil {
+			// TODO: LOG THIS
+		}
+	}
+
+	_, err = r.repo.UpdateSecurityToken(userId, newSecurityToken)
+	if err != nil {
+		// TODO: LOG THIS
 	}
 
 	return updated, nil
 }
 
-func (r *recoveryService) SendRecoveryEmail(dto *commons.DTO) (bool, error) {
+func (r *recoveryService) SendEmailWithApiCall(dto *commons.DTO) (bool, error) {
 	jsonBody, err := json.Marshal(dto)
 	if err != nil {
 		return false, config.ErrUnexpectedError
