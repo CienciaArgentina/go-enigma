@@ -20,7 +20,7 @@ RUN go mod download
 # COPY the source code as the last step
 COPY . .
 
-
+WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/cmd/enigma-server
 # build the source
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main
 # strip and compress the binary
