@@ -34,4 +34,4 @@ WORKDIR /root
 # copy the binary from builder
 COPY --from=builder /go/src/github.com/CienciaArgentina/go-enigma/ .
 # run the binary
-CMD ["./cmd/enigma/main"]
+CMD ["./cmd/enigma-server/main"]
