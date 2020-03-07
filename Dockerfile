@@ -11,8 +11,8 @@ RUN xz -d -c /usr/local/upx-3.94-amd64_linux.tar.xz | \
 # install dep
 RUN go get github.com/golang/dep/cmd/dep
 # create a working directory
-WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
 COPY . /go/src/github.com/CienciaArgentina/go-enigma/
+WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
 
 COPY go.mod go.sum ./
 # Get dependancies - will also be cached if we won't change mod/sum
