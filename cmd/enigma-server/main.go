@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/CienciaArgentina/go-enigma/config"
 	"github.com/CienciaArgentina/go-enigma/internal/http/rest"
+	"github.com/CienciaArgentina/go-enigma/internal/listing"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
@@ -29,7 +30,11 @@ func main() {
 	recSvc := recovery.NewService(recRepo, cfg)
 	recCtlr := rest.NewRecoveryController(recSvc)
 
-	if err := rest.InitRouter(h, regCtrl, logCtrl, recCtlr).Run(cfg.Server.Port); err != nil {
+	lisRepo := repositories.NewListingRepository(db)
+	lisSvc := listing.NewService(lisRepo)
+	lisCtlr := rest.NewListingController(lisSvc)
+
+	if err := rest.InitRouter(h, regCtrl, logCtrl, recCtlr, lisCtlr).Run(cfg.Server.Port); err != nil {
 		panic(err)
 	}
 }

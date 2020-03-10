@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	GetEmailByUserId = "GetEmailByUserId"
+	GetEmailByUserId = "GetUserByUserId"
 )
 
 type RecoveryRepositoryMock struct {
