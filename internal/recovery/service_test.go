@@ -10,6 +10,11 @@ import (
 
 const (
 	GetEmailByUserId = "GetUserByUserId"
+	GetEmailByUserId   = "GetEmailByUserId"
+	ConfirmUserEmail   = "ConfirmUserEmail"
+	GetuserIdByEmail   = "GetuserIdByEmail"
+	GetUsernameByEmail = "GetUsernameByEmail"
+	GetSecurityToken = "GetSecurityToken"
 )
 
 type RecoveryRepositoryMock struct {
@@ -19,6 +24,36 @@ type RecoveryRepositoryMock struct {
 func (r *RecoveryRepositoryMock) GetEmailByUserId(userId int64) (string, *UserEmail, error) {
 	args := r.Called(userId)
 	return args.Get(0).(string), args.Get(1).(*UserEmail), args.Error(2)
+}
+
+func (r *RecoveryRepositoryMock) ConfirmUserEmail(email string, token string) error {
+	args := r.Called(email, token)
+	return args.Error(0)
+}
+
+func (r *RecoveryRepositoryMock) GetuserIdByEmail(email string) (int64, error) {
+	args := r.Called(email)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) GetUsernameByEmail(email string) (string, error) {
+	args := r.Called(email)
+	return args.Get(0).(string), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) GetSecurityToken(email string) (string, error) {
+	args := r.Called(email)
+	return args.Get(0).(string), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) UpdatePasswordHash(userId int64, passwordHash  string) (bool, error) {
+	args := r.Called(userId, passwordHash)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (r *RecoveryRepositoryMock) UpdateSecurityToken(userId int64, newSecurityToken string) (bool, error) {
+	args := r.Called(userId, newSecurityToken)
+	return args.Get(0).(bool), args.Error(1)
 }
 
 func GetServiceAndMock() (Service, *RecoveryRepositoryMock) {
@@ -58,10 +93,146 @@ func TestSendConfirmationEmailShouldReturnNoErrorIfUserEmailIsEmpty(t *testing.T
 func TestSendConfirmationEmailShouldReturnErrorIfEmailIsAlreadyVerified(t *testing.T) {
 	svc, mock := GetServiceAndMock()
 	verified := &UserEmail{
-		VerfiedEmail:     true,
+		VerfiedEmail: true,
 	}
 	mock.On(GetEmailByUserId, int64(1)).Return("notempty", verified, nil)
 	sent, err := svc.SendConfirmationEmail(1)
 	require.Equal(t, config.ErrEmailAlreadyVerified, err)
+	require.False(t, sent)
+}
+
+func TestConfirmEmailShouldThrowErrorWhenEmailIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+
+	confirm, err := svc.ConfirmEmail("", "")
+	require.False(t, confirm)
+	require.Equal(t, config.ErrEmailValidationFailed, err)
+}
+
+func TestConfirmEmailShouldThrowErrorWhenTokenIsNil(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+
+	confirm, err := svc.ConfirmEmail("asd", "")
+	require.False(t, confirm)
+	require.Equal(t, config.ErrEmailValidationFailed, err)
+}
+
+func TestConfirmEmailShouldThrowErrorWhenConfirmationFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(ConfirmUserEmail, "asd", "asd").Return(config.ErrEmailValidationFailed)
+	confirm, err := svc.ConfirmEmail("asd", "asd")
+	require.False(t, confirm)
+	require.Equal(t, config.ErrEmailValidationFailed, err)
+}
+
+func TestConfirmEmailShouldThrowNoError(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(ConfirmUserEmail, "asd", "asd").Return(nil)
+	confirm, err := svc.ConfirmEmail("asd", "asd")
+	require.True(t, confirm)
+	require.Nil(t, err)
+}
+
+func TestResendEmailConfirmationEmailShouldReturnErrorWhenEmailisNil(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.ResendEmailConfirmationEmail("")
+	require.False(t, sent)
+	require.Equal(t, config.ErrEmptyEmail, err)
+}
+
+func TestResendEmailConfirmationEmailShouldReturnErrorWhenGetUserIdByEmailFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetuserIdByEmail, "asd").Return(int64(0), errors.New("Indistinct"))
+	sent, err := svc.ResendEmailConfirmationEmail("asd")
+	require.False(t, sent)
+	require.Equal(t, "Indistinct", err.Error())
+}
+
+func TestResendEmailConfirmationEmailShouldReturnErrorWhenSendConfirmationEmailFaisl(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetuserIdByEmail, "asd").Return(int64(1), nil)
+	verified := &UserEmail{
+		VerfiedEmail: false,
+	}
+	mock.On(GetEmailByUserId, int64(1)).Return("notempty", verified, nil)
+	sent, err := svc.ResendEmailConfirmationEmail("asd")
+	require.False(t, sent)
+	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
+}
+
+func TestSendUsernameShouldReturnErrorWhenEmailIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+
+	sent, err := svc.SendUsername("")
+	require.Equal(t, config.ErrEmptyEmail, err)
+	require.False(t, sent)
+}
+
+func TestSendUsernameShouldReturnErrorWhenGetUsernameFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetUsernameByEmail, "asd").Return("", errors.New("Indistinct"))
+	sent, err := svc.SendUsername("asd")
+	require.Equal(t, "Indistinct", err.Error())
+	require.False(t, sent)
+}
+
+func TestSendUsernameShouldReturnErrorWhenEmailSenderFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetUsernameByEmail, "asd").Return("juan", nil)
+	sent, err := svc.SendUsername("asd")
+	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldReturnErrWhenEmailIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.SendPasswordReset("")
+	require.Equal(t, config.ErrEmptyEmail, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldReturnErrWhenSecurityTokenFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("", config.ErrEmptySearch)
+	sent, err := svc.SendPasswordReset("asd")
+	require.Equal(t, config.ErrEmptySearch, err)
+	require.False(t, sent)
+}
+
+func TestSendPasswordResetShouldFailWhenTryingToDoApiCall(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("a", nil)
+	sent, err := svc.SendPasswordReset("asd")
+	require.Equal(t, config.ErrEmailSendServiceNotWorking, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenFieldIsEmpty(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.ResetPassword("", "", "", "")
+	require.Equal(t, config.ErrEmptyField, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenPasswordDontMatch(t *testing.T) {
+	svc, _ := GetServiceAndMock()
+	sent, err := svc.ResetPassword("asd", "a", "b", "asd")
+	require.Equal(t, config.ErrPasswordConfirmationDoesntMatch, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenTokenFetchFails(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("", config.ErrEmptySearch)
+	sent, err := svc.ResetPassword("asd", "a", "a", "asd")
+	require.Equal(t, config.ErrEmptySearch, err)
+	require.False(t, sent)
+}
+
+func TestResetPassWordShouldReturnErrorWhenTokensDontMatch(t *testing.T) {
+	svc, mock := GetServiceAndMock()
+	mock.On(GetSecurityToken, "asd").Return("aa", nil)
+	sent, err := svc.ResetPassword("asd", "a", "a", "bb")
+	require.Equal(t, config.ErrPasswordTokenIsNotValid, err)
 	require.False(t, sent)
 }

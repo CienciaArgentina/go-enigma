@@ -29,5 +29,10 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *lo
 		user.POST("/login", l.Login)
 		user.GET("/sendconfirmationemail/:userId", rc.SendConfirmationEmail)
 		user.GET("/:id", lc.GetUserByUserId)
+		user.GET("/confirmemail", rc.ConfirmEmail)
+		user.GET("/resendconfirmationemail", rc.ResendEmailConfirmation)
+		user.GET("/forgotusername", rc.ForgotUsername)
+		user.GET("/sendpasswordreset", rc.SendPasswordReset)
+		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
 	}
 }

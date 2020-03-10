@@ -14,15 +14,13 @@ RUN go get github.com/golang/dep/cmd/dep
 WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/
 COPY . /go/src/github.com/CienciaArgentina/go-enigma/
 
-COPY go.mod .
-COPY go.sum .
-
+COPY go.mod go.sum ./
 # Get dependancies - will also be cached if we won't change mod/sum
 RUN go mod download
 # COPY the source code as the last step
 COPY . .
 
-
+WORKDIR /go/src/github.com/CienciaArgentina/go-enigma/cmd/enigma-server
 # build the source
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main
 # strip and compress the binary
@@ -36,4 +34,4 @@ WORKDIR /root
 # copy the binary from builder
 COPY --from=builder /go/src/github.com/CienciaArgentina/go-enigma/ .
 # run the binary
-CMD ["./cmd/enigma/main"]
+CMD ["./cmd/enigma-server/main"]
