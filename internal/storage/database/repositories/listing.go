@@ -14,7 +14,7 @@ func NewListingRepository(db *sqlx.DB) listing.Repository {
 }
 
 func (l *listingRepository) GetUserByUserId(id int64) (*listing.User, error) {
-	var u *listing.User
+	var u listing.User
 
 	var email string
 	err := l.db.Get(&email, "SELECT email FROM users_email WHERE user_id = ?", id)
@@ -31,6 +31,6 @@ func (l *listingRepository) GetUserByUserId(id int64) (*listing.User, error) {
 	u.Username = username
 	u.Email = email
 
-	return u, nil
+	return &u, nil
 }
 

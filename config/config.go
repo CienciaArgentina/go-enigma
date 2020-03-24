@@ -70,7 +70,7 @@ type Server struct {
 }
 
 type Keys struct {
-	PasswordHashingKey string `env:"key_passwordHashing"`
+	PasswordHashingKey string `env:"ENV_KEY_PASSWORDHASHING"`
 }
 
 type Microservices struct {

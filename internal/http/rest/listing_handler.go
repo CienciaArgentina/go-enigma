@@ -17,7 +17,7 @@ func NewListingController(svc listing.Service) *listingontroller {
 
 
 func (l *listingontroller) GetUserByUserId(c *gin.Context) {
-	userIdParam := c.Param("userId")
+	userIdParam := c.Param("id")
 	if userIdParam == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody, false))
 		return

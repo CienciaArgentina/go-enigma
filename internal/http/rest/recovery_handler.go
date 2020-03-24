@@ -17,7 +17,7 @@ func NewRecoveryController(svc recovery.Service) *recoveryController {
 }
 
 func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
-	userIdParam := c.Param("userId")
+	userIdParam := c.Param("id")
 	if userIdParam == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody, false))
 		return
