@@ -8,6 +8,7 @@
 - [What's that `GetHandler`?](#whats-that-gethandler)
 - [Working directory](#working-directory)
 - [cURLs](#curls)
+- [TO-DO](#to-do)
 
 ## Introduction
 Its main purpose is to provide a service for both authentication and authorization.
@@ -112,5 +113,7 @@ curl --request GET \
   --url 'http://localhost:8080/users/forgotusername?email={userEmail}'
 ```
 
-### 
-
+## TO-DO
+- Add roles
+- Add claims?
+- Delete user
