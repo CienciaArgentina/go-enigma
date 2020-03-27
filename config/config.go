@@ -12,9 +12,9 @@ const (
 	GoEnvironment = "GO_ENVIRONMENT"
 	Scope         = "SCOPE"
 
-	Production  = "prod"
+	Production  = "production"
 	Test        = "test"
-	Development = "dev"
+	Development = "development"
 )
 
 var (
