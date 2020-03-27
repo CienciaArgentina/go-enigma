@@ -19,14 +19,9 @@ func InitRouter(h *healthController, ur *registerController, l *loginController,
 }
 
 func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) {
-	// Health
-	health := r.Group("/")
-	{
-		health.GET("/ping", h.Ping)
-	}
-
 	user := r.Group("/users")
 	{
+		user.GET("/ping", h.Ping)
 		user.POST("/", ur.SignUp)
 		user.POST("/login", l.Login)
 		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
