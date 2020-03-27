@@ -143,7 +143,7 @@ func New() *Configuration {
 
 	err = envconfig.Process("env_", config)
 	if err != nil {
-		return DefaultConfiguration()
+		return DefaultConfiguration(err)
 	}
 	return config
 }
