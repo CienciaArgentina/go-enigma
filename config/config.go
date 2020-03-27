@@ -144,7 +144,6 @@ func New() *Configuration {
 	if err != nil {
 		return DefaultConfiguration()
 	}
-
 	return config
 }
 
