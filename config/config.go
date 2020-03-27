@@ -121,13 +121,14 @@ func DefaultConfiguration(err error) *Configuration {
 	}
 
 	//panic(errNotEvenDefaultConfiguration)
-	files, _ := ioutil.ReadDir("./")
+
+	pwd, err := os.Getwd()
+	files, _ := ioutil.ReadDir(pwd)
 	var sb strings.Builder
 	for _, f := range files {
-		sb.WriteString(fmt.Sprintf("%s \n", f.Name()))
+		sb.WriteString(fmt.Sprintf("- %s \n", f.Name()))
 	}
-	pwd, err := os.Getwd()
-	panic(fmt.Sprintf("LS: %s \n | WD: %s | Err: %s", sb.String(),pwd, err.Error()))
+	panic(fmt.Sprintf("LS:  %s \n | WD: %s", sb.String(), pwd))
 }
 
 func New() *Configuration {
