@@ -128,7 +128,7 @@ func New() *Configuration {
 		scope = Development
 	}
 
-	data, err := os.Open(fmt.Sprintf("../../config/config.%s.yml", scope))
+	data, err := os.Open(fmt.Sprintf("/config/config.%s.yml", scope))
 	if err != nil {
 		return DefaultConfiguration()
 	}
