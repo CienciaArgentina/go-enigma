@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
-	"strings"
 )
 
 const (
@@ -99,7 +97,7 @@ type ArgonParams struct {
 	KeyLength   uint32
 }
 
-func DefaultConfiguration(err error) *Configuration {
+func DefaultConfiguration() *Configuration {
 	// Even though it's kind of difficult to get to this point, I made this function so I'm sure that I'm always connected to a development scope
 	if os.Getenv(GoEnvironment) != Production && os.Getenv(Scope) != Production {
 		return &Configuration{
@@ -120,15 +118,15 @@ func DefaultConfiguration(err error) *Configuration {
 		}
 	}
 
-	//panic(errNotEvenDefaultConfiguration)
+	panic(errNotEvenDefaultConfiguration)
 
-	pwd, err := os.Getwd()
-	files, _ := ioutil.ReadDir(pwd)
-	var sb strings.Builder
-	for _, f := range files {
-		sb.WriteString(fmt.Sprintf("- %s \n", f.Name()))
-	}
-	panic(fmt.Sprintf("LS:  %s \n | WD: %s", sb.String(), pwd))
+	//pwd, err := os.Getwd()
+	//files, _ := ioutil.ReadDir(pwd)
+	//var sb strings.Builder
+	//for _, f := range files {
+	//	sb.WriteString(fmt.Sprintf("- %s \n", f.Name()))
+	//}
+	//panic(fmt.Sprintf("LS:  %s \n | WD: %s", sb.String(), pwd))
 }
 
 func New() *Configuration {
@@ -138,9 +136,9 @@ func New() *Configuration {
 		scope = Development
 	}
 
-	data, err := os.Open(fmt.Sprintf("/config/config.%s.yml", scope))
+	data, err := os.Open(fmt.Sprintf("./config/config.%s.yml", scope))
 	if err != nil {
-		return DefaultConfiguration(err)
+		return DefaultConfiguration()
 	}
 
 	defer data.Close()
@@ -152,7 +150,7 @@ func New() *Configuration {
 
 	err = envconfig.Process("env_", config)
 	if err != nil {
-		return DefaultConfiguration(err)
+		return DefaultConfiguration()
 	}
 	return config
 }
