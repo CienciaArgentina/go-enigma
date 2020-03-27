@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	GetEmailByUserId   = "GetEmailByUserId"
+	GetEmailByUserId = "GetEmailByUserId"
 	ConfirmUserEmail   = "ConfirmUserEmail"
 	GetuserIdByEmail   = "GetuserIdByEmail"
 	GetUsernameByEmail = "GetUsernameByEmail"

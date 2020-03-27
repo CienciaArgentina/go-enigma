@@ -56,7 +56,7 @@ func (r *registerRepository) VerifyIfUserExists(email, username string) (bool, e
 	}
 
 	if exists > 0 {
-		return exists > 0, config.ErrUsernameAlreadyRegistered
+		return true, config.ErrUsernameAlreadyRegistered
 	}
 
 	normalizedemail := strings.ToUpper(email)
@@ -64,7 +64,9 @@ func (r *registerRepository) VerifyIfUserExists(email, username string) (bool, e
 	err = r.db.Get(&exists, "SELECT count(*) FROM users_email WHERE normalized_email = ?", normalizedemail)
 	if err != nil {
 		return true, err
+	} else if exists > 0 {
+		return true, config.ErrEmailAlreadyRegistered
 	}
 
-	return exists > 0, config.ErrEmailAlreadyRegistered
+	return false, nil
 }
