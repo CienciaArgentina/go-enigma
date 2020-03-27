@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 const (
@@ -119,7 +121,14 @@ func DefaultConfiguration(err error) *Configuration {
 	}
 
 	//panic(errNotEvenDefaultConfiguration)
-	panic(err)
+
+	pwd, err := os.Getwd()
+	files, _ := ioutil.ReadDir(pwd)
+	var sb strings.Builder
+	for _, f := range files {
+		sb.WriteString(fmt.Sprintf("- %s \n", f.Name()))
+	}
+	panic(fmt.Sprintf("LS:  %s \n | WD: %s", sb.String(), pwd))
 }
 
 func New() *Configuration {
