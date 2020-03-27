@@ -21,7 +21,6 @@ func InitRouter(h *healthController, ur *registerController, l *loginController,
 func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) {
 	user := r.Group("/users")
 	{
-		user.GET("/ping", h.Ping)
 		user.POST("/", ur.SignUp)
 		user.POST("/login", l.Login)
 		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
@@ -32,13 +31,13 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *lo
 		//user.GET("/forgotusername", rc.ForgotUsername)
 		//user.GET("/sendpasswordreset", rc.SendPasswordReset)
 		user.GET("/:id", func (c *gin.Context) {
-			GetHandler(c, rc, lc)
+			GetHandler(c, h, rc, lc)
 		})
 	}
 }
 
 // I have to do this just because gin works like shit
-func GetHandler(c *gin.Context, rc *recoveryController, lc *listingontroller) {
+func GetHandler(c *gin.Context, h *healthController, rc *recoveryController, lc *listingontroller) {
 	id := c.Param("id")
 
 	if strings.HasPrefix(c.Request.RequestURI, "/sendconfirmationemail") {
@@ -59,5 +58,8 @@ func GetHandler(c *gin.Context, rc *recoveryController, lc *listingontroller) {
 	} else if strings.HasPrefix(c.Request.RequestURI, "/sendpasswordreset") {
 			// /users/sendpasswordreset
 			rc.SendPasswordReset(c)
+	} else if strings.HasPrefix(c.Request.RequestURI, "/ping") {
+		// /users/ping
+		h.Ping(c)
 	}
 }
