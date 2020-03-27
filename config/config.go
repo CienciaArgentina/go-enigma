@@ -97,7 +97,7 @@ type ArgonParams struct {
 	KeyLength   uint32
 }
 
-func DefaultConfiguration() *Configuration {
+func DefaultConfiguration(err error) *Configuration {
 	// Even though it's kind of difficult to get to this point, I made this function so I'm sure that I'm always connected to a development scope
 	if os.Getenv(GoEnvironment) != Production && os.Getenv(Scope) != Production {
 		return &Configuration{
@@ -118,7 +118,8 @@ func DefaultConfiguration() *Configuration {
 		}
 	}
 
-	panic(errNotEvenDefaultConfiguration)
+	//panic(errNotEvenDefaultConfiguration)
+	panic(err)
 }
 
 func New() *Configuration {
@@ -130,7 +131,7 @@ func New() *Configuration {
 
 	data, err := os.Open(fmt.Sprintf("/config/config.%s.yml", scope))
 	if err != nil {
-		return DefaultConfiguration()
+		return DefaultConfiguration(err)
 	}
 
 	defer data.Close()
