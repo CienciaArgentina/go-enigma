@@ -1,6 +1,6 @@
 appname: enigma
 database:
-  db_username: "cienciaArgentinaDev"
+  db_username: "root"
   db_port: "3306"
 server:
   server_port: ":8080"
