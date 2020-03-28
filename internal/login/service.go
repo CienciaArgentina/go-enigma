@@ -56,6 +56,7 @@ func defaultLoginOptions() *LoginOptions {
 }
 
 func (s *loginService) Login(u *UserLogin) (string, error) {
+	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Iniciando service de Login")
 	canLogin, err := s.VerifyCanLogin(u)
 	if !canLogin {
