@@ -9,7 +9,7 @@ type listingService struct {
 }
 
 func NewService(r Repository) Service {
-	return &listingService{repo:r}
+	return &listingService{repo: r}
 }
 
 func (l *listingService) GetUserByUserId(id int64) (*User, error) {

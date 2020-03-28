@@ -89,7 +89,7 @@ func (rs *registerService) SignUp(u *UserSignUp) (int64, []error) {
 	}
 
 	var err error
-	user.PasswordHash, err = encryption.GenerateEncodedHash(u.Password)
+	user.PasswordHash, err = encryption.GenerateEncodedHash(u.Password, rs.config)
 	if err != nil {
 		errs = append(errs, err)
 	}

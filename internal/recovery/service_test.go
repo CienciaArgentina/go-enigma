@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	GetEmailByUserId = "GetEmailByUserId"
+	GetEmailByUserId   = "GetEmailByUserId"
 	ConfirmUserEmail   = "ConfirmUserEmail"
 	GetuserIdByEmail   = "GetuserIdByEmail"
 	GetUsernameByEmail = "GetUsernameByEmail"
-	GetSecurityToken = "GetSecurityToken"
+	GetSecurityToken   = "GetSecurityToken"
 )
 
 type RecoveryRepositoryMock struct {
@@ -45,7 +45,7 @@ func (r *RecoveryRepositoryMock) GetSecurityToken(email string) (string, error) 
 	return args.Get(0).(string), args.Error(1)
 }
 
-func (r *RecoveryRepositoryMock) UpdatePasswordHash(userId int64, passwordHash  string) (bool, error) {
+func (r *RecoveryRepositoryMock) UpdatePasswordHash(userId int64, passwordHash string) (bool, error) {
 	args := r.Called(userId, passwordHash)
 	return args.Get(0).(bool), args.Error(1)
 }

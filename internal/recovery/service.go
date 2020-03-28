@@ -155,7 +155,7 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 		return false, config.ErrPasswordTokenIsNotValid
 	}
 
-	newHashedPassword, err := encryption.GenerateEncodedHash(password)
+	newHashedPassword, err := encryption.GenerateEncodedHash(password, r.cfg)
 	if err != nil {
 		return false, err
 	}
@@ -174,7 +174,7 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 
 	if updated {
 		emailDto := commons.DTO{
-			To:      []string{email},
+			To:       []string{email},
 			Data:     nil,
 			Template: "passwordresetnotification",
 		}

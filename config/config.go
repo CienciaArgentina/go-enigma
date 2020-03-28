@@ -37,7 +37,7 @@ var (
 	ErrPwDoesNotContainsADigit         = errors.New("La contraseña debe poseer al menos 1 dígito")
 	ErrUsernameCotainsIlegalChars      = errors.New("El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)")
 	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
-	ErrUsernameAlreadyRegistered = errors.New("Este nombre de usuario ya se encuentra registrado")
+	ErrUsernameAlreadyRegistered       = errors.New("Este nombre de usuario ya se encuentra registrado")
 	ErrInvalidEmail                    = errors.New("El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)")
 	ErrUnexpectedError                 = errors.New("Ocurrió un error en el sistema")
 	ErrEmailAlreadyVerified            = errors.New("El mail ya se encuentra confirmado")
@@ -55,6 +55,7 @@ type Configuration struct {
 	Server        `yaml:"server"`
 	Keys          `yaml:"keys"`
 	Microservices `yaml:"microservices"`
+	ArgonParams   `yaml:"argonparams"`
 }
 
 type Database struct {
@@ -90,11 +91,11 @@ type Microservices struct {
 }
 
 type ArgonParams struct {
-	Memory      uint32
-	Iterations  uint32
-	Parallelism uint8
-	SaltLength  uint32
-	KeyLength   uint32
+	Memory      uint32 `yaml:"memory"`
+	Iterations  uint32 `yaml:"iterations"`
+	Parallelism uint8  `yaml:"parallelism"`
+	SaltLength  uint32 `yaml:"salt_length"`
+	KeyLength   uint32 `yaml:"key_length"`
 }
 
 func DefaultConfiguration() *Configuration {

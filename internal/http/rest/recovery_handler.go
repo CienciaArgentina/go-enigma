@@ -123,7 +123,7 @@ func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
 	var err error
 	reset, err := r.svc.ResetPassword(dto.Email, dto.Password, dto.ConfirmPassword, dto.Token)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest,nil, err, reset))
+		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, reset))
 		return
 	}
 

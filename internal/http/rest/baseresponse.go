@@ -1,10 +1,10 @@
 package rest
 
 type BaseResponse struct {
-	Data   interface{}  `json:"data"`
-	Error  []*APIErrors `json:"error"`
-	Status int          `json:"status"`
-	Success bool `json:"success"`
+	Data    interface{}  `json:"data"`
+	Error   []*APIErrors `json:"error"`
+	Status  int          `json:"status"`
+	Success bool         `json:"success"`
 }
 
 type APIErrors struct {
@@ -18,9 +18,9 @@ func NewBaseResponse(status int, data interface{}, error interface{}, success bo
 	}
 
 	return &BaseResponse{
-		Data:   data,
-		Error:  errs,
-		Status: status,
+		Data:    data,
+		Error:   errs,
+		Status:  status,
 		Success: success,
 	}
 }
