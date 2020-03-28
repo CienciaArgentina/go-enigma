@@ -2,8 +2,10 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -24,10 +26,16 @@ func NewLoginRepository(db *sqlx.DB) login.Repository {
 func (l *loginRepository) GetUserByUsername(username string) (*login.User, *login.UserEmail, error) {
 	var user login.User
 
+	logrus.Info("Consultando si el usuario existe (SELECT * FROM users where username)")
+	start := time.Now()
+
 	err := l.db.Get(&user, "SELECT * FROM users where username = ?", username)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	elapsed := time.Since(start)
+	logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó consulta sobre usuario")
 
 	if user == (login.User{}) {
 		return nil, nil, errInvalidLogin
@@ -35,10 +43,16 @@ func (l *loginRepository) GetUserByUsername(username string) (*login.User, *logi
 
 	var userEmail login.UserEmail
 
+	logrus.Info("Consultando si el email existe (SELECT * FROM users_email WHERE user_id)")
+	start = time.Now()
+
 	err = l.db.Get(&userEmail, "SELECT * FROM users_email WHERE user_id = ?", user.UserId)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	elapsed = time.Since(start)
+	logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó consulta sobre email")
 
 	if userEmail == (login.UserEmail{}) {
 		return nil, nil, errInvalidEmail
@@ -52,7 +66,13 @@ func (l *loginRepository) IncrementLoginFailAttempt(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
+	logrus.Info("Actualizando failed login attempts (UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id)")
+	start := time.Now()
+
 	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id = ?", userId)
+
+	elapsed := time.Since(start)
+	logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó failed login attempts")
 	return err
 }
 

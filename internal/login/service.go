@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/config"
 	jwt2 "github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/argon2"
 	"strings"
 	"time"
@@ -55,25 +56,38 @@ func defaultLoginOptions() *LoginOptions {
 }
 
 func (s *loginService) Login(u *UserLogin) (string, error) {
+	logrus.Info("Iniciando service de Login")
 	canLogin, err := s.VerifyCanLogin(u)
 	if !canLogin {
 		return "", err
 	}
+
+	logrus.Info("Iniciando GetUserByUsername")
+	start := time.Now()
 
 	user, userEmail, err := s.repo.GetUserByUsername(u.Username)
 	if err != nil {
 		return "", err
 	}
 
+	elapsed := time.Since(start)
+	logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó GetUserByUsername")
+
 	if user == nil || user == (&User{}) || userEmail == nil || userEmail == (&UserEmail{}) {
 		return "", config.ErrInvalidLogin
 	}
+
+	logrus.Info("Iniciando evaluación del hash del password")
+	start = time.Now()
 
 	verifyPassword, err := comparePasswordAndHash(u.Password, user.PasswordHash)
 	if err != nil {
 		// Return friendly message
 		return "", config.ErrThroughLogin
 	}
+
+	elapsed = time.Since(start)
+	logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó evaluación del hash del password")
 
 	if user.LockoutEnabled {
 		// If the user is locked but time is up we should unlock the account
@@ -99,10 +113,17 @@ func (s *loginService) Login(u *UserLogin) (string, error) {
 			}
 			return "", fmt.Errorf("Debido a repetidos intentos tu cuenta fue bloqueada por %v minutos", s.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
 		}
+
+		logrus.Info("Iniciando IncrementLoginFailAttempt")
+		start = time.Now()
+
 		err := s.repo.IncrementLoginFailAttempt(user.UserId)
 		if err != nil {
 			// TODO: Log this
 		}
+
+		elapsed = time.Since(start)
+		logrus.WithField("elapsed", fmt.Sprintf("%dms", elapsed.Milliseconds())).Info("Terminó IncrementLoginFailAttempt")
 		return "", config.ErrInvalidLogin
 	}
 
