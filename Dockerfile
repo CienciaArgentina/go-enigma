@@ -28,7 +28,7 @@ RUN strip --strip-unneeded main
 RUN upx main
 
 # use scratch (base for a docker image)
-FROM scratch
+FROM golang:alpine
 # set working directory
 WORKDIR /root
 # copy the binary from builder
