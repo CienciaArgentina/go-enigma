@@ -25,7 +25,7 @@ func NewLoginRepository(db *sqlx.DB) login.Repository {
 
 func (l *loginRepository) GetUserByUsername(username string) (*login.User, *login.UserEmail, error) {
 	var user login.User
-
+	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Consultando si el usuario existe (SELECT * FROM users where username)")
 	start := time.Now()
 
@@ -66,6 +66,7 @@ func (l *loginRepository) IncrementLoginFailAttempt(userId int) error {
 		return errUserIdMustBeGreaterThanZero
 	}
 
+	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Actualizando failed login attempts (UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id)")
 	start := time.Now()
 
