@@ -24,12 +24,6 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *lo
 		user.POST("/", ur.SignUp)
 		user.POST("/login", l.Login)
 		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
-		//user.GET("/sendconfirmationemail/:id/", rc.SendConfirmationEmail)
-		//user.GET("/:id", lc.GetUserByUserId)
-		//user.GET("/confirmemail", rc.ConfirmEmail)
-		//user.GET("/resendconfirmationemail", rc.ResendEmailConfirmation)
-		//user.GET("/forgotusername", rc.ForgotUsername)
-		//user.GET("/sendpasswordreset", rc.SendPasswordReset)
 		user.GET("/:id", func(c *gin.Context) {
 			GetHandler(c, h, rc, lc)
 		})
