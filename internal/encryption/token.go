@@ -70,9 +70,9 @@ func GenerateRandomBytes(n uint32) ([]byte, error) {
 // For guidance and an outline process for choosing appropriate parameters see https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4.
 func GenerateEncodedHash(pw string) (string, error) {
 	p := &config.ArgonParams{
-		Memory:      128 * 1024,
-		Iterations:  4,
-		Parallelism: 4,
+		Memory:      64*1024,
+		Iterations:  2,
+		Parallelism: 1,
 		SaltLength:  32,
 		KeyLength:   32,
 	}
