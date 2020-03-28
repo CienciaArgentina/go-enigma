@@ -116,6 +116,13 @@ func DefaultConfiguration() *Configuration {
 				// This is just for a development scope
 				PasswordHashingKey: "98616F779CAA278695ADAF88BF4C1",
 			},
+			ArgonParams: ArgonParams{
+				Memory:      65536,
+				Iterations:  2,
+				Parallelism: 1,
+				SaltLength:  32,
+				KeyLength:   32,
+			},
 		}
 	}
 
