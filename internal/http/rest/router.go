@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
+	"github.com/gin-contrib/cors"
 )
 
 var (
@@ -14,6 +15,7 @@ var (
 
 func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
 	r := gin.Default()
+	r.Use(cors.Default())
 	MapRoutes(r, h, ur, l, rc, lc)
 	return r
 }
