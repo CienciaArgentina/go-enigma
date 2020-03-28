@@ -30,7 +30,7 @@ func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *lo
 		//user.GET("/resendconfirmationemail", rc.ResendEmailConfirmation)
 		//user.GET("/forgotusername", rc.ForgotUsername)
 		//user.GET("/sendpasswordreset", rc.SendPasswordReset)
-		user.GET("/:id", func (c *gin.Context) {
+		user.GET("/:id", func(c *gin.Context) {
 			GetHandler(c, h, rc, lc)
 		})
 	}
@@ -50,14 +50,14 @@ func GetHandler(c *gin.Context, h *healthController, rc *recoveryController, lc 
 		// /users/confirmemail
 		rc.ConfirmEmail(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/resendconfirmationemail") {
-			// /users/resendconfirmationemail
-			rc.ResendEmailConfirmation(c)
+		// /users/resendconfirmationemail
+		rc.ResendEmailConfirmation(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/forgotusername") {
-			// /users/forgotusername
-			rc.ForgotUsername(c)
+		// /users/forgotusername
+		rc.ForgotUsername(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/sendpasswordreset") {
-			// /users/sendpasswordreset
-			rc.SendPasswordReset(c)
+		// /users/sendpasswordreset
+		rc.SendPasswordReset(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/ping") {
 		// /users/ping
 		h.Ping(c)

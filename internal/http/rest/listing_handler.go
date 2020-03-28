@@ -15,7 +15,6 @@ func NewListingController(svc listing.Service) *listingontroller {
 	return &listingontroller{svc: svc}
 }
 
-
 func (l *listingontroller) GetUserByUserId(c *gin.Context) {
 	userIdParam := c.Param("id")
 	if userIdParam == "" {

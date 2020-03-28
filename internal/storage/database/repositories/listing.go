@@ -33,4 +33,3 @@ func (l *listingRepository) GetUserByUserId(id int64) (*listing.User, error) {
 
 	return &u, nil
 }
-

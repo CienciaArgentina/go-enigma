@@ -37,21 +37,21 @@ func GenerateSecurityToken(password string, c *config.Configuration) string {
 	return tokenString
 }
 
-func GenerateFromPassword(password string, p *config.ArgonParams) (string, error) {
+func GenerateFromPassword(password string, cfg *config.Configuration) (string, error) {
 	// Generate a cryptographically secure random salt.
-	salt, err := GenerateRandomBytes(p.SaltLength)
+	salt, err := GenerateRandomBytes(cfg.ArgonParams.SaltLength)
 	if err != nil {
 		return "", err
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	hash := argon2.IDKey([]byte(password), salt, cfg.ArgonParams.Iterations, cfg.ArgonParams.Memory, cfg.ArgonParams.Parallelism, cfg.ArgonParams.KeyLength)
 
 	// Base64 encode the salt and hashed password.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
 	// Return a string using the standard encoded hash representation.
-	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.Memory, p.Iterations, p.Parallelism, b64Salt, b64Hash)
+	encodedHash := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, cfg.ArgonParams.Memory, cfg.ArgonParams.Iterations, cfg.ArgonParams.Parallelism, b64Salt, b64Hash)
 
 	return encodedHash, nil
 }
@@ -68,16 +68,8 @@ func GenerateRandomBytes(n uint32) ([]byte, error) {
 
 // https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go
 // For guidance and an outline process for choosing appropriate parameters see https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4.
-func GenerateEncodedHash(pw string) (string, error) {
-	p := &config.ArgonParams{
-		Memory:      64*1024,
-		Iterations:  2,
-		Parallelism: 1,
-		SaltLength:  32,
-		KeyLength:   32,
-	}
-
-	encodedHash, err := GenerateFromPassword(pw, p)
+func GenerateEncodedHash(pw string, cfg *config.Configuration) (string, error) {
+	encodedHash, err := GenerateFromPassword(pw, cfg)
 	if err != nil {
 		return "", err
 	}

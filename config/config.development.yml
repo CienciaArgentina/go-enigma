@@ -4,6 +4,12 @@ database:
   db_port: "3306"
 server:
   server_port: ":8080"
+argonparams:
+  memory: 64*1024
+  iterations: 2
+  parallelism: 1
+  salt_length: 32
+  key_length: 32
 microservices:
   base_url: "localhost:8080"
   user_endpoints:
