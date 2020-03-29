@@ -21,6 +21,7 @@ func NewLoginController(svc login.Service) *loginController {
 func (l *loginController) Login(c *gin.Context) {
 	var dto login.UserLogin
 
+	c.Header("Access-Control-Allow-Origin", "*")
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Iniciando request de Login")
 	start := time.Now()
