@@ -2,10 +2,10 @@ package rest
 
 import (
 	"errors"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
-	"github.com/gin-contrib/cors"
 )
 
 var (
@@ -17,7 +17,6 @@ func InitRouter(h *healthController, ur *registerController, l *loginController,
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins:        true,
-		AllowOrigins:           []string{"*"},
 		AllowMethods:           []string{"PUT", "PATCH", "POST", "GET", "DELETE"},
 		AllowHeaders:           []string{"Origin"},
 	}))
