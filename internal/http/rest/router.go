@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -15,7 +16,13 @@ var (
 
 func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
 	r := gin.Default()
-	r.Use(cors.Default())
+	c := cors.Config{
+		AllowOrigins:           []string{"*"},
+		AllowMethods:           []string{"POST", "GET", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders:     		[]string{"Origin", "Content-Length", "Content-Type"},
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
+	}
 	MapRoutes(r, h, ur, l, rc, lc)
 	return r
 }
