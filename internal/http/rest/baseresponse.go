@@ -8,6 +8,7 @@ type BaseResponse struct {
 }
 
 type APIErrors struct {
+	Code string `json:"code"`
 	Detail string `json:"detail"`
 }
 

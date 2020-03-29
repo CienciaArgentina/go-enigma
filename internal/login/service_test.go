@@ -29,27 +29,27 @@ func (l *LoginRepositoryMock) GetUserByUsername(username string) (*User, *UserEm
 	return args.Get(0).(*User), args.Get(1).(*UserEmail), args.Error(2)
 }
 
-func (l *LoginRepositoryMock) IncrementLoginFailAttempt(userId int) error {
+func (l *LoginRepositoryMock) IncrementLoginFailAttempt(userId int64) error {
 	args := l.Called(userId)
 	return args.Error(0)
 }
 
-func (l *LoginRepositoryMock) ResetLoginFails(userId int) error {
+func (l *LoginRepositoryMock) ResetLoginFails(userId int64) error {
 	args := l.Called(userId)
 	return args.Error(0)
 }
 
-func (l *LoginRepositoryMock) UnlockAccount(userId int) error {
+func (l *LoginRepositoryMock) UnlockAccount(userId int64) error {
 	args := l.Called(userId)
 	return args.Error(0)
 }
 
-func (l *LoginRepositoryMock) LockAccount(userId int, duration time.Duration) error {
+func (l *LoginRepositoryMock) LockAccount(userId int64, duration time.Duration) error {
 	args := l.Called(userId)
 	return args.Error(0)
 }
 
-func (l *LoginRepositoryMock) GetUserRole(userId int) (string, error) {
+func (l *LoginRepositoryMock) GetUserRole(userId int64) (string, error) {
 	args := l.Called(userId)
 	return args.Get(0).(string), args.Error(1)
 }

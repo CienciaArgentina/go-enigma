@@ -1,11 +1,11 @@
 package rest
 
 import (
+	"encoding/json"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type registerController struct {
@@ -19,13 +19,16 @@ func NewRegisterController(svc register.Service) *registerController {
 func (r *registerController) SignUp(c *gin.Context) {
 	var dto register.UserSignUp
 
-	if err := c.ShouldBindJSON(&dto); err != nil {
-		if strings.Contains(err.Error(), "EOF") {
-			err = errEmptyBody
-		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
-		return
-	}
+	//if err := c.ShouldBindJSON(&dto); err != nil {
+	//	if strings.Contains(err.Error(), "EOF") {
+	//		err = errEmptyBody
+	//	}
+	//	c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
+	//	return
+	//}
+
+	rawData, _ := c.GetRawData()
+	json.Unmarshal(rawData, &dto)
 
 	userId, errs := r.svc.SignUp(&dto)
 	if errs != nil {
