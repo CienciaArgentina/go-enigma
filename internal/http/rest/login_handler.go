@@ -1,12 +1,12 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -25,16 +25,13 @@ func (l *loginController) Login(c *gin.Context) {
 	logrus.Info("Iniciando request de Login")
 	start := time.Now()
 
-	rawReq, _ := c.GetRawData()
-	json.Unmarshal(rawReq, &dto)
-	//
-	//if err := c.ShouldBindJSON(&dto); err != nil {
-	//	if strings.Contains(err.Error(), "EOF") {
-	//		err = errEmptyBody
-	//	}
-	//	c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
-	//	return
-	//}
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		if strings.Contains(err.Error(), "EOF") {
+			err = errEmptyBody
+		}
+		c.JSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
+		return
+	}
 
 	jwt, err := l.svc.Login(&dto)
 	if err != nil {
