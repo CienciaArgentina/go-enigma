@@ -15,7 +15,12 @@ var (
 
 func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins:        true,
+		AllowOrigins:           []string{"*"},
+		AllowMethods:           []string{"PUT", "PATCH", "POST", "GET", "DELETE"},
+		AllowHeaders:           []string{"Origin"},
+	}))
 	MapRoutes(r, h, ur, l, rc, lc)
 	return r
 }
