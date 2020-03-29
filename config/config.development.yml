@@ -5,8 +5,8 @@ database:
 server:
   server_port: ":8080"
 argonparams:
-  memory: 65536
-  iterations: 2
+  memory: 256
+  iterations: 1
   parallelism: 1
   salt_length: 32
   key_length: 32
