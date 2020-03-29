@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
@@ -31,6 +32,9 @@ func (l *loginRepository) GetUserByUsername(username string) (*login.User, *logi
 
 	err := l.db.Get(&user, "SELECT * FROM users where username = ?", username)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, nil
+		}
 		return nil, nil, err
 	}
 
