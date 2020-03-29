@@ -65,7 +65,7 @@ func (l *loginRepository) GetUserByUsername(username string) (*login.User, *logi
 	return &user, &userEmail, nil
 }
 
-func (l *loginRepository) IncrementLoginFailAttempt(userId int) error {
+func (l *loginRepository) IncrementLoginFailAttempt(userId int64) error {
 	if userId == 0 {
 		return errUserIdMustBeGreaterThanZero
 	}
@@ -81,7 +81,7 @@ func (l *loginRepository) IncrementLoginFailAttempt(userId int) error {
 	return err
 }
 
-func (l *loginRepository) ResetLoginFails(userId int) error {
+func (l *loginRepository) ResetLoginFails(userId int64) error {
 	if userId == 0 {
 		return errUserIdMustBeGreaterThanZero
 	}
@@ -90,7 +90,7 @@ func (l *loginRepository) ResetLoginFails(userId int) error {
 	return err
 }
 
-func (l *loginRepository) UnlockAccount(userId int) error {
+func (l *loginRepository) UnlockAccount(userId int64) error {
 	if userId == 0 {
 		return errUserIdMustBeGreaterThanZero
 	}
@@ -99,7 +99,7 @@ func (l *loginRepository) UnlockAccount(userId int) error {
 	return err
 }
 
-func (l *loginRepository) LockAccount(userId int, duration time.Duration) error {
+func (l *loginRepository) LockAccount(userId int64, duration time.Duration) error {
 	if userId == 0 {
 		return errUserIdMustBeGreaterThanZero
 	}
@@ -108,7 +108,7 @@ func (l *loginRepository) LockAccount(userId int, duration time.Duration) error 
 	return err
 }
 
-func (l *loginRepository) GetUserRole(userId int) (string, error) {
+func (l *loginRepository) GetUserRole(userId int64) (string, error) {
 	if userId == 0 {
 		return "", errUserIdMustBeGreaterThanZero
 	}
