@@ -2,8 +2,8 @@ package rest
 
 import (
 	"errors"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -15,20 +15,24 @@ var (
 
 func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
 	r := gin.Default()
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins:        true,
-		AllowMethods:           []string{"PUT", "PATCH", "POST", "GET", "DELETE"},
-		AllowHeaders:           []string{"Origin"},
-	}))
 	MapRoutes(r, h, ur, l, rc, lc)
 	return r
+}
+
+func BeforeRequest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if os.Getenv("SCOPE") == "development" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", c.Request.Header.Get("Origin"))
+		}
+		c.Next()
+	}
 }
 
 func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) {
 	user := r.Group("/users")
 	{
 		user.POST("/", ur.SignUp)
-		user.POST("/login", l.Login)
+		user.POST("/login", BeforeRequest(), l.Login)
 		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
 		user.GET("/:id", func(c *gin.Context) {
 			GetHandler(c, h, rc, lc)
