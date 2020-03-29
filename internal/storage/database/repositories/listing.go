@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+
 type listingRepository struct {
 	db *sqlx.DB
 }
