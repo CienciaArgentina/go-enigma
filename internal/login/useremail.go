@@ -5,7 +5,7 @@ import (
 )
 
 type UserEmail struct {
-	UserEmailId      int            `json:"user_email_id" db:"user_email_id"`
+	UserEmailId      int64          `json:"user_email_id" db:"user_email_id"`
 	UserId           int64          `json:"user_id" db:"user_id"`
 	Email            string         `json:"email" db:"email"`
 	NormalizedEmail  string         `json:"normalized_email" db:"normalized_email"`
