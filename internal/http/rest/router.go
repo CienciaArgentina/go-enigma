@@ -2,10 +2,7 @@ package rest
 
 import (
 	"errors"
-	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -17,15 +14,6 @@ var (
 
 func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
 	r := gin.Default()
-
-	if os.Getenv(config.Scope) == config.Development {
-		c := cors.Config{
-			AllowAllOrigins: true,
-			AllowMethods:    []string{"POST", "GET", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-			AllowHeaders:    []string{"*"},
-		}
-		r.Use(cors.New(c))
-	}
 	MapRoutes(r, h, ur, l, rc, lc)
 	return r
 }
