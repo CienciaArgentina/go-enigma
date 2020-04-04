@@ -2,7 +2,7 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/CienciaArgentina/go-enigma/internal/register"
+	"github.com/CienciaArgentina/go-enigma/internal_old/register"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"

@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/CienciaArgentina/go-enigma/internal/recovery"
+	"github.com/CienciaArgentina/go-enigma/internal_old/recovery"
 	"github.com/jmoiron/sqlx"
 )
 

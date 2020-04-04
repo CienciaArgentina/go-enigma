@@ -1,3 +1,5 @@
+github.com/CienciaArgentina/go-backend-commons v0.0.4 h1:AAij4Hag+tPAjyil14KnmzfeVCfmVSXLB1/Xzp7nDh4=
+github.com/CienciaArgentina/go-backend-commons v0.0.4/go.mod h1:+4vmvGhh/GhIhIC89wVlVv37hZx5+UOD4YJ07Q/eIfg=
 github.com/CienciaArgentina/go-email-sender v0.0.0-20200303023941-5019d948d2c1 h1:T9iwflEXmOU01gypWvKoBlCoJ1cgOykFwTv6fzoD8mA=
 github.com/CienciaArgentina/go-email-sender v0.0.0-20200303023941-5019d948d2c1/go.mod h1:lGJuqR1LLX1/2yztwzHYNUuGA14AMz38O24mrjbp06g=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

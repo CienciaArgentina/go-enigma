@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/CienciaArgentina/go-enigma/internal/recovery"
+	"github.com/CienciaArgentina/go-enigma/internal_old/recovery"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"

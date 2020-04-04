@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/CienciaArgentina/go-enigma/internal/login"
+	"github.com/CienciaArgentina/go-enigma/internal_old/login"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 	"time"

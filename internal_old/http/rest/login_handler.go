@@ -2,7 +2,7 @@ package rest
 
 import (
 	"fmt"
-	"github.com/CienciaArgentina/go-enigma/internal/login"
+	"github.com/CienciaArgentina/go-enigma/internal_old/login"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
