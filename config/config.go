@@ -21,12 +21,12 @@ const (
 var (
 	Config *Configuration
 
-	errNotEvenDefaultConfiguration     = fmt.Errorf("No es posible generar configuración default ya que el scope es %s", os.Getenv(Scope))
-	ErrInvalidLogin                    = errors.New("El usuario o la contraseña especificados no existe")
-	ErrInvalidHash                     = errors.New("El hash no usa el encoding correcto")
-	ErrIncompatibleVersion             = errors.New("Versión de argon2 incompatible")
-	ErrThroughLogin                    = errors.New("Ocurrió un error al momento de loguear")
-	ErrEmailNotVerified                = errors.New("Tu dirección de email no fue verificada aún")
+	errNotEvenDefaultConfiguration = fmt.Errorf("No es posible generar configuración default ya que el scope es %s", os.Getenv(Scope))
+
+	ErrInvalidHash         = errors.New("El hash no usa el encoding correcto")
+	ErrIncompatibleVersion = errors.New("Versión de argon2 incompatible")
+
+
 	ErrEmptyUserId                     = errors.New("El userId no puede estar vacío")
 	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
 	ErrUsernameAlreadyRegistered       = errors.New("Este nombre de usuario ya se encuentra registrado")
@@ -46,57 +46,12 @@ const (
 	ErrInvalidBody     = "El cuerpo del mensaje que intenta enviar no es válido"
 	ErrInvalidBodyCode = "invalid_body"
 
-	// User - Sign up
-
-	// General
-	ErrCantCreateUser = "No es posible crear esta cuenta ya que hay errores en los campos"
-
 	// Empty
-	ErrEmptyUsername      = "El nombre de usuario no puede estar vacío"
-	ErrEmptyPassword      = "La contraseña no puede estar vacía"
-	ErrEmptyEmail         = "El email no puede estar vacío"
-	ErrEmptyFieldUserCode = "invalid_user_signup"
-
-	// Email regex
-	ErrInvalidEmailFormat     = "El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)"
-	ErrInvalidEmailFormatCode = "invalid_email"
-
-	// Email already exists
-	ErrEmailAlreadyExists                = "La dirección de correo electrónica ya se encuentra registrada"
-	ErrEmailAlreadyExistsCode            = "duplicate_email"
-	ErrEmailAlreadyExistsInternalErr     = "Ocurrió un error al intentar validar si el email existe"
-	ErrEmailAlreadyExistsInternalErrCode = "internal_error"
-
-	// Username already exists
-	ErrUserAlreadyExists                = "Este nombre de usuario ya se encuentra registrado"
-	ErrUserAlreadyExistsCode            = "duplicate_user"
-	ErrUserAlreadyExistsInternalErr     = "Ocurrió un error al intentar validar si el usuario existe"
-	ErrUserAlreadyExistsInternalErrCode = "internal_error"
-
-	// Username characters
-	ErrInvalidUsernameCode        = "invalid_username"
-	ErrUsernameCotainsIlegalChars = "El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)"
-
-	// Password
-	ErrInvalidPasswordCode = "invalid_password"
-	ErrPwContainsSpace     = "La contraseña no puede poseer espacios"
-
-	// Password characters
-	ErrPwDoesNotContainsUppercase     = "La contraseña debe contener al menos un caracter en mayúscula"
-	ErrPwDoesNotContainsLowercase     = "La contraseña debe contener al menos un caracter en minúscula"
-	ErrPwDoesNotContainsNonAlphaChars = "La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)"
-	ErrPwDoesNotContainsADigit        = "La contraseña debe poseer al menos 1 dígito"
-
-	// Password hash error
-	ErrPasswordHash     = "Se generó un problema al encriptar la contraseña"
-	ErrPasswordHashCode = "password_hash_failed"
-
-	// Add user
-	ErrInvalidRegisterCode = "invalid_register"
-	ErrAddingUser          = "Ocurrió un error al intentar agregar el usuario"
-
-	// Add user email in user
-	ErrAddingUserEmail = "Ocurrió un error al intentar agregar el email del usuario"
+	ErrEmptyUsername            = "El nombre de usuario no puede estar vacío"
+	ErrEmptyPassword            = "La contraseña no puede estar vacía"
+	ErrEmptyEmail               = "El email no puede estar vacío"
+	ErrEmptyFieldUserCodeSignup = "invalid_user_signup"
+	ErrEmptyFieldUserCodeLogin  = "invalid_user_login"
 )
 
 type Configuration struct {
@@ -169,6 +124,16 @@ type RegisterOptions struct {
 		RequireDigit bool
 		// How many unique chars do the password need?
 		RequiredUniqueChars int
+	}
+}
+
+type LoginOptions struct {
+	LockoutOptions struct {
+		LockoutTimeDuration time.Duration
+		MaxFailedAttempts   int
+	}
+	SignInOptions struct {
+		RequireConfirmedEmail bool
 	}
 }
 

@@ -12,8 +12,3 @@ type UserEmail struct {
 	DateCreated      time.Time `json:date_created`
 	DateDeleted      time.Time `json:date_deleted`
 }
-
-type UserEmailService interface {
-	GetUserEmailByUserId(email string) (*User, error)
-	GetUserIdByEmail(email string) (int64, error)
-}

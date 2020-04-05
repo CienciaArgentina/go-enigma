@@ -7,6 +7,7 @@ import (
 	"github.com/CienciaArgentina/go-enigma/config"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/argon2"
+	"strings"
 	"time"
 )
 
@@ -75,4 +76,80 @@ func GenerateEncodedHash(pw string, cfg *config.Configuration) (string, error) {
 	}
 
 	return encodedHash, nil
+}
+
+func decodeHash(encodedHash string) (p *config.ArgonParams, salt, hash []byte, err error) {
+	vals := strings.Split(encodedHash, "$")
+	if len(vals) != 6 {
+		// TODO: Log this
+		return nil, nil, nil, config.ErrInvalidHash
+	}
+
+	var version int
+	_, err = fmt.Sscanf(vals[2], "v=%d", &version)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if version != argon2.Version {
+		// TODO: Log this
+		return nil, nil, nil, config.ErrIncompatibleVersion
+	}
+
+	p = &config.ArgonParams{}
+	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.RawStdEncoding.DecodeString(vals[4])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.RawStdEncoding.DecodeString(vals[5])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.KeyLength = uint32(len(hash))
+
+	return p, salt, hash, nil
+}
+
+func DecodeHash(encodedHash string) (p *config.ArgonParams, salt, hash []byte, err error) {
+	vals := strings.Split(encodedHash, "$")
+	if len(vals) != 6 {
+		// TODO: Log this
+		return nil, nil, nil, config.ErrInvalidHash
+	}
+
+	var version int
+	_, err = fmt.Sscanf(vals[2], "v=%d", &version)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if version != argon2.Version {
+		// TODO: Log this
+		return nil, nil, nil, config.ErrIncompatibleVersion
+	}
+
+	p = &config.ArgonParams{}
+	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.RawStdEncoding.DecodeString(vals[4])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.RawStdEncoding.DecodeString(vals[5])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.KeyLength = uint32(len(hash))
+
+	return p, salt, hash, nil
 }

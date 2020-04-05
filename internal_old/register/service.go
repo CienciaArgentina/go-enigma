@@ -9,7 +9,7 @@ package register
 //	"time"
 //)
 //
-//// The following errors will be returned to the user
+//// The following errors will be returned to the register
 //var ()
 //
 //type RegisterOptions struct {
@@ -79,7 +79,7 @@ package register
 //	//	return 0, errs
 //	//}
 //
-//	user := &User{
+//	register := &User{
 //		Username:           u.Username,
 //		NormalizedUsername: strings.ToUpper(u.Username),
 //		DateCreated:        time.Now(),
@@ -88,12 +88,12 @@ package register
 //	}
 //
 //	var err error
-//	user.PasswordHash, err = encryption.GenerateEncodedHash(u.Password, rs.config)
+//	register.PasswordHash, err = encryption.GenerateEncodedHash(u.Password, rs.config)
 //	if err != nil {
 //		errs = append(errs, err)
 //	}
 //
-//	userId, err := rs.repository.AddUser(user)
+//	userId, err := rs.repository.AddUser(register)
 //	if err != nil {
 //		errs = append(errs, err)
 //		return 0, errs

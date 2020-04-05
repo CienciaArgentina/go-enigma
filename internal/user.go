@@ -2,10 +2,7 @@ package domain
 
 import (
 	"database/sql"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx"
 	"time"
 )
 
@@ -23,26 +20,13 @@ type User struct {
 	DateDeleted         *time.Time     `json:"date_deleted" db:"date_deleted"`
 }
 
-type UserDTO struct {
+type UserSignupDTO struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }
 
-type UserService interface {
-	UserCanSignUp(u *UserDTO) (bool, apierror.ApiError)
-	CreateUser(u *UserDTO) (int64, apierror.ApiError)
-}
-
-type UserRepository interface {
-	GetUserById(userId int64) (*User, error)
-	AddUser(tx *sqlx.Tx, u *User) (int64, error)
-	AddUserEmail(tx *sqlx.Tx, e *UserEmail) (int64, error)
-	DeleteUser(userId int64) error
-	CheckUsernameExists(username string) (bool, error)
-	CheckEmailExists(email string) (bool, error)
-}
-
-type UserController interface {
-	SignUp(c *gin.Context)
+type UserLoginDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

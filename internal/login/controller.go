@@ -1,4 +1,4 @@
-package user
+package login
 
 import (
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
@@ -8,27 +8,27 @@ import (
 	"net/http"
 )
 
-type userController struct {
-	svc domain.UserService
+type loginController struct {
+	svc LoginService
 }
 
-func NewController(s domain.UserService) domain.UserController {
-	return &userController{svc: s}
+func NewController(s LoginService) LoginController {
+	return &loginController{svc: s}
 }
 
-func (u *userController) SignUp(c *gin.Context) {
-	var usr domain.UserDTO
+func (l *loginController) Login(c *gin.Context) {
+	var usr *domain.UserLoginDTO
 
-	if err := c.ShouldBindJSON(&usr); err != nil {
+	if err := c.ShouldBindJSON(usr); err != nil {
 		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrInvalidBody, apierror.NewErrorCause(config.ErrInvalidBody, config.ErrInvalidBodyCode)))
 		return
 	}
 
-	userId, errs := u.svc.CreateUser(&usr)
+	jwt, errs := l.svc.LoginUser(usr)
 	if errs != nil {
 		c.JSON(http.StatusBadRequest, errs)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user_id": userId})
+	c.JSON(http.StatusOK, gin.H{"jwt": jwt})
 }

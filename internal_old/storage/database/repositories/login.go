@@ -13,7 +13,7 @@ import (
 var (
 	errInvalidLogin                = errors.New("El usuario o la contraseña especificados no existe")
 	errInvalidEmail                = errors.New("Por alguna razón tu usuario no tiene email asociado")
-	errUserIdMustBeGreaterThanZero = errors.New("El user id tiene que ser mayor que 0")
+	errUserIdMustBeGreaterThanZero = errors.New("El register id tiene que ser mayor que 0")
 )
 
 type loginRepository struct {
