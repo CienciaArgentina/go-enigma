@@ -42,7 +42,7 @@ var (
 
 const (
 	// Request
-	ErrInvalidBody     = "El cuerpo del mensaje que intenta enviar no es válido"
+	ErrInvalidBody     = "El cuerpo del mensaje que intentás enviar no es válido"
 	ErrInvalidBodyCode = "invalid_body"
 
 	// Empty

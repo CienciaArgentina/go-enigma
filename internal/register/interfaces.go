@@ -7,11 +7,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RegisterService interface {
-	UserCanSignUp(u *domain.UserSignupDTO) (bool, apierror.ApiError)
-	CreateUser(u *domain.UserSignupDTO) (int64, apierror.ApiError)
-}
-
 type RegisterRepository interface {
 	GetUserById(userId int64) (*domain.User, error)
 	AddUser(tx *sqlx.Tx, u *domain.User) (int64, error)
@@ -19,6 +14,11 @@ type RegisterRepository interface {
 	DeleteUser(userId int64) error
 	CheckUsernameExists(username string) (bool, error)
 	CheckEmailExists(email string) (bool, error)
+}
+
+type RegisterService interface {
+	UserCanSignUp(u *domain.UserSignupDTO) (bool, apierror.ApiError)
+	CreateUser(u *domain.UserSignupDTO) (int64, apierror.ApiError)
 }
 
 type RegisterController interface {

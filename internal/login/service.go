@@ -31,7 +31,7 @@ const (
 	ErrFailedPasswordDecryptionCode = "failed_decryption"
 
 	// Email not verified
-	ErrEmailNotVerified     = "Tu dirección de email no fue verificada aún"
+	ErrEmailNotVerified     = "Tu dirección de email no fue confirmada aún"
 	ErrEmailNotVerifiedCode = "email_not_verified"
 
 	// Invalid Email

@@ -68,4 +68,3 @@ func (l *loginRepository) LockAccount(userId int64, duration time.Duration) erro
 	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 1, lockout_date = ? where user_id = ?", time.Now().Add(duration), userId)
 	return err
 }
-

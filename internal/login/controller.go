@@ -17,14 +17,14 @@ func NewController(s LoginService) LoginController {
 }
 
 func (l *loginController) Login(c *gin.Context) {
-	var usr *domain.UserLoginDTO
+	var usr domain.UserLoginDTO
 
-	if err := c.ShouldBindJSON(usr); err != nil {
+	if err := c.ShouldBindJSON(&usr); err != nil {
 		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrInvalidBody, apierror.NewErrorCause(config.ErrInvalidBody, config.ErrInvalidBodyCode)))
 		return
 	}
 
-	jwt, errs := l.svc.LoginUser(usr)
+	jwt, errs := l.svc.LoginUser(&usr)
 	if errs != nil {
 		c.JSON(http.StatusBadRequest, errs)
 		return
