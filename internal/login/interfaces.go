@@ -18,7 +18,6 @@ type LoginRepository interface {
 	ResetLoginFails(userId int64) error
 	UnlockAccount(userId int64) error
 	LockAccount(userId int64, duration time.Duration) error
-	GetUserRole(userId int64) (string, error)
 }
 
 type LoginController interface {

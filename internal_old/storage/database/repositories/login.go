@@ -107,20 +107,3 @@ func (l *loginRepository) LockAccount(userId int64, duration time.Duration) erro
 	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 1, lockout_date = ? where user_id = ?", time.Now().Add(duration), userId)
 	return err
 }
-
-func (l *loginRepository) GetUserRole(userId int64) (string, error) {
-	if userId == 0 {
-		return "", errUserIdMustBeGreaterThanZero
-	}
-
-	var roleId int
-	err := l.db.Get(&roleId, "SELECT role_id FROM user_roles where user_id = ?", userId)
-	if err != nil {
-		return "", err
-	}
-
-	var role string
-	err = l.db.Get(&role, "SELECT name FROM roles where role_id = ?", roleId)
-
-	return role, err
-}

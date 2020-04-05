@@ -26,7 +26,6 @@ var (
 	ErrInvalidHash         = errors.New("El hash no usa el encoding correcto")
 	ErrIncompatibleVersion = errors.New("Versión de argon2 incompatible")
 
-
 	ErrEmptyUserId                     = errors.New("El userId no puede estar vacío")
 	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
 	ErrUsernameAlreadyRegistered       = errors.New("Este nombre de usuario ya se encuentra registrado")

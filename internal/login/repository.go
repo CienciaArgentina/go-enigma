@@ -17,7 +17,6 @@ func NewRepository(db *sqlx.DB) LoginRepository {
 	return &loginRepository{db: db}
 }
 
-
 func (l *loginRepository) GetUserByUsername(username string) (*domain.User, *domain.UserEmail, apierror.ApiError) {
 	var user domain.User
 
@@ -51,23 +50,22 @@ func (l *loginRepository) GetUserByUsername(username string) (*domain.User, *dom
 }
 
 func (l *loginRepository) IncrementLoginFailAttempt(userId int64) error {
-	panic("implement me")
+	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = failed_login_attempts + 1 where user_id = ?", userId)
+	return err
 }
 
 func (l *loginRepository) ResetLoginFails(userId int64) error {
-	panic("implement me")
+	_, err := l.db.Exec("UPDATE users SET failed_login_attempts = 0 where user_id = ?", userId)
+	return err
 }
 
 func (l *loginRepository) UnlockAccount(userId int64) error {
-	panic("implement me")
+	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 0, lockout_date = null, failed_login_attempts = 0 where user_id = ?", userId)
+	return err
 }
 
 func (l *loginRepository) LockAccount(userId int64, duration time.Duration) error {
-	panic("implement me")
+	_, err := l.db.Exec("UPDATE users SET lockout_enabled = 1, lockout_date = ? where user_id = ?", time.Now().Add(duration), userId)
+	return err
 }
-
-func (l *loginRepository) GetUserRole(userId int64) (string, error) {
-	panic("implement me")
-}
-
 

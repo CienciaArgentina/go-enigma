@@ -17,7 +17,7 @@ const (
 	// Login
 
 	// Internal server error
-	ErrFailedTryingToLogin     = "Ocurrió un error al momento de loguear, intentá nuevamente o comunicate con sistemas"
+	ErrFailedTryingToLogin = "Ocurrió un error al momento de loguear, intentá nuevamente o comunicate con sistemas"
 
 	// Failed
 	ErrInvalidLoginCode = "invalid_login"
@@ -31,11 +31,11 @@ const (
 	ErrFailedPasswordDecryptionCode = "failed_decryption"
 
 	// Email not verified
-	ErrEmailNotVerified                = "Tu dirección de email no fue verificada aún"
-	ErrEmailNotVerifiedCode  = "email_not_verified"
+	ErrEmailNotVerified     = "Tu dirección de email no fue verificada aún"
+	ErrEmailNotVerifiedCode = "email_not_verified"
 
 	// Invalid Email
-	ErrInvalidEmail = "El mail no se encuentra registrado"
+	ErrInvalidEmail     = "El mail no se encuentra registrado"
 	ErrInvalidEmailCode = "invalid_email"
 
 	// User fetch failed
@@ -57,7 +57,7 @@ func NewService(c *config.Configuration, l *config.LoginOptions, r LoginReposito
 	return &loginService{
 		cfg:          c,
 		loginOptions: l,
-		repository: r,
+		repository:   r,
 	}
 }
 
@@ -136,8 +136,8 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 	// TODO: Add role
 
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": user.UserId,
-		"email":  userEmail.Email,
+		"userId":    user.UserId,
+		"email":     userEmail.Email,
 		"timestamp": time.Now().Unix(),
 	})
 

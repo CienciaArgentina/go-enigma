@@ -25,8 +25,6 @@ const (
 	// General
 	ErrCantCreateUser = "No es posible crear esta cuenta ya que hay errores en los campos"
 
-
-
 	// Email regex
 	ErrInvalidEmailFormat     = "El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)"
 	ErrInvalidEmailFormatCode = "invalid_email"
