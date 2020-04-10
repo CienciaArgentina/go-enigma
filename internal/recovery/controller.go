@@ -3,7 +3,7 @@ package recovery
 import (
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/CienciaArgentina/go-enigma/internal_old/recovery"
+	domain "github.com/CienciaArgentina/go-enigma/internal"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -112,7 +112,7 @@ func (r *recoveryController) SendPasswordReset(c *gin.Context) {
 }
 
 func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
-	var dto recovery.PasswordResetDto
+	var dto domain.PasswordResetDto
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		if strings.Contains(err.Error(), "EOF") {

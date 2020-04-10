@@ -2,10 +2,10 @@ package rest
 
 import (
 	"github.com/CienciaArgentina/go-enigma/config"
+	"github.com/CienciaArgentina/go-enigma/internal/infraestructure"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
-	"github.com/CienciaArgentina/go-enigma/internal_old/storage/database"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -19,7 +19,7 @@ func InitRouter(cfg *config.Configuration) *gin.Engine {
 }
 
 func MapRoutes(r *gin.Engine, cfg *config.Configuration) {
-	db := database.New(cfg)
+	db := infraestructure.New(cfg)
 
 	registerRepo := register.NewRepository(db)
 	registerSvc := register.NewService(cfg, db, nil, registerRepo)
