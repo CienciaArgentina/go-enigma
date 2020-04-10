@@ -34,7 +34,7 @@ var (
 	ErrEmailSendServiceNotWorking      = errors.New("Por alguna razón el servicio de envío de emails falló")
 
 
-	ErrValidationTokenFailed           = errors.New("La validación del token falló")
+
 
 
 	ErrEmptySearch                     = errors.New("La búsqueda no arrojó ningún resultado")
