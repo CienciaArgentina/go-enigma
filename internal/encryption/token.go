@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	ErrFailedDecryptionCode = "failed_decryption"
+)
+
 func GenerateVerificationToken(email string, expiry time.Duration, c *config.Configuration) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email":      email,

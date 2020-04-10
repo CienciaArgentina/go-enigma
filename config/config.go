@@ -29,14 +29,14 @@ var (
 	ErrEmptyUserId                     = errors.New("El userId no puede estar vacío")
 	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
 	ErrUsernameAlreadyRegistered       = errors.New("Este nombre de usuario ya se encuentra registrado")
-	ErrUnexpectedError                 = errors.New("Ocurrió un error en el sistema")
-	ErrEmailAlreadyVerified            = errors.New("El mail ya se encuentra confirmado")
+
+
 	ErrEmailSendServiceNotWorking      = errors.New("Por alguna razón el servicio de envío de emails falló")
-	ErrEmailValidationFailed           = errors.New("La validación del email falló por algún campo vacío")
-	ErrEmptyField                      = errors.New("Hay algún campo vacío y no puede estarlo")
+
+
 	ErrValidationTokenFailed           = errors.New("La validación del token falló")
-	ErrPasswordConfirmationDoesntMatch = errors.New("Los passwords ingresados no son idénticos")
-	ErrPasswordTokenIsNotValid         = errors.New("El token para resetear la contraseña no es válido")
+
+
 	ErrEmptySearch                     = errors.New("La búsqueda no arrojó ningún resultado")
 )
 
@@ -46,14 +46,21 @@ const (
 	ErrInvalidBodyCode = "invalid_body"
 
 	// Empty
+	ErrEmptyField                      = "Hay algún campo vacío y no puede estarlo"
+	ErrEmptyFieldCode = "empty_field"
 	ErrEmptyUsername            = "El nombre de usuario no puede estar vacío"
 	ErrEmptyPassword            = "La contraseña no puede estar vacía"
 	ErrEmptyEmail               = "El email no puede estar vacío"
+	ErrEmptyEmailCode = "empty_email"
 	ErrEmptyFieldUserCodeSignup = "invalid_user_signup"
 	ErrEmptyFieldUserCodeLogin  = "invalid_user_login"
+
+	// General
+	ErrUnexpectedError                 = "Ocurrió un error en el sistema, por favor, ponete en contacto con sistemas"
 )
 
 type Configuration struct {
+	AppName string `yaml:"appname"`
 	Database      `yaml:"database"`
 	Server        `yaml:"server"`
 	Keys          `yaml:"keys"`
@@ -78,6 +85,7 @@ type Keys struct {
 }
 
 type Microservices struct {
+	Scheme string `yaml:"scheme"`
 	BaseUrl        string `yaml:"base_url"`
 	UsersEndpoints struct {
 		BaseResource          string `yaml:"base_resource"`
