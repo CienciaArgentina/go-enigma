@@ -7,37 +7,37 @@ import (
 	"strconv"
 	"strings"
 )
-
-type recoveryController struct {
-	svc recovery.Service
-}
-
-func NewRecoveryController(svc recovery.Service) *recoveryController {
-	return &recoveryController{svc: svc}
-}
-
-func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
-	userIdParam := c.Param("id")
-	if userIdParam == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody, false))
-		return
-	}
-
-	var err error
-	parsedUserId, err := strconv.ParseInt(userIdParam, 10, 64)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
-		return
-	}
-
-	sent, err := r.svc.SendConfirmationEmail(parsedUserId)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, sent))
-		return
-	}
-
-	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, nil, nil, sent))
-}
+//
+//type recoveryController struct {
+//	svc recovery.Service
+//}
+//
+//func NewRecoveryController(svc recovery.Service) *recoveryController {
+//	return &recoveryController{svc: svc}
+//}
+//
+//func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
+//	userIdParam := c.Param("id")
+//	if userIdParam == "" {
+//		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, errEmptyBody, false))
+//		return
+//	}
+//
+//	var err error
+//	parsedUserId, err := strconv.ParseInt(userIdParam, 10, 64)
+//	if err != nil {
+//		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, false))
+//		return
+//	}
+//
+//	sent, err := r.svc.SendConfirmationEmail(parsedUserId)
+//	if err != nil {
+//		c.AbortWithStatusJSON(http.StatusBadRequest, NewBaseResponse(http.StatusBadRequest, nil, err, sent))
+//		return
+//	}
+//
+//	c.JSON(http.StatusOK, NewBaseResponse(http.StatusOK, nil, nil, sent))
+//}
 
 func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 
