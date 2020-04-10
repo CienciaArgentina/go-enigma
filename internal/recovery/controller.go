@@ -132,3 +132,20 @@ func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func (r *recoveryController) GetUserByUserId(c *gin.Context) {
+	id := c.Param("id")
+
+	userid, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+	}
+
+	usr, e := r.svc.GetUserByUserId(int64(userid))
+	if e != nil {
+		 c.JSON(e.Status(), e)
+		 return
+	}
+
+	c.JSON(http.StatusOK, usr)
+}
+

@@ -14,6 +14,7 @@ type RecoveryRepository interface {
 	GetSecurityToken(email string) (string, apierror.ApiError)
 	UpdatePasswordHash(userId int64, passwordHash string) (bool, apierror.ApiError)
 	UpdateSecurityToken(userId int64, newSecurityToken string) (bool, apierror.ApiError)
+	GetUserByUserId(userId int64) (*domain.User, apierror.ApiError)
 }
 
 type RecoveryService interface {
@@ -23,6 +24,7 @@ type RecoveryService interface {
 	SendUsername(email string) (bool, apierror.ApiError)
 	SendPasswordReset(email string) (bool, apierror.ApiError)
 	ResetPassword(email, password, confirmPassword, token string) (bool, apierror.ApiError)
+	GetUserByUserId(userId int64) (*domain.User, apierror.ApiError)
 }
 
 type RecoveryController interface {
@@ -32,4 +34,5 @@ type RecoveryController interface {
 	ForgotUsername(c *gin.Context)
 	SendPasswordReset(c *gin.Context)
 	ConfirmPasswordReset(c *gin.Context)
+	GetUserByUserId(c *gin.Context)
 }

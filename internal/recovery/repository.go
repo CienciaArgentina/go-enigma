@@ -2,11 +2,9 @@ package recovery
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-enigma/config"
 	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/CienciaArgentina/go-enigma/internal_old/recovery"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 )
@@ -229,3 +227,19 @@ func (r *recoveryRepository) UpdateSecurityToken(userId int64, newSecurityToken 
 	return true, nil
 }
 
+func (r *recoveryRepository) GetUserByUserId(userId int64) (*domain.User, apierror.ApiError) {
+	if userId == 0 {
+		return nil, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
+	}
+
+	var usr domain.User
+	err := r.db.Get(&usr, "SELECT * FROM users where user_id = ?", userId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
+		}
+		return nil, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+	}
+
+	return &usr, nil
+}

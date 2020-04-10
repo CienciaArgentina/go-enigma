@@ -206,3 +206,11 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 	return updated, nil
 }
 
+func (r *recoveryService) GetUserByUserId(userId int64) (*domain.User, apierror.ApiError) {
+	usr, err := r.repository.GetUserByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return usr, nil
+}
