@@ -1,16 +1,21 @@
 appname: enigma
+
 database:
-  db_username: "root"
+  db_username: "cienciaArgentinaDev"
   db_port: "3306"
+
 server:
   server_port: ":8080"
+
 argonparams:
   memory: 256
   iterations: 1
   parallelism: 1
   salt_length: 32
   key_length: 32
+
 microservices:
+  scheme: "http"
   base_url: "localhost:8080"
   user_endpoints:
     base_resource: "/users"

@@ -1,4 +1,4 @@
-package login
+package domain
 
 import (
 	"database/sql"
@@ -18,4 +18,22 @@ type User struct {
 	SecurityToken       sql.NullString `json:"security_token" db:"security_token"`
 	VerificationToken   string         `json:"verification_token" db:"verification_token"`
 	DateDeleted         *time.Time     `json:"date_deleted" db:"date_deleted"`
+}
+
+type UserSignupDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+type UserLoginDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type PasswordResetDto struct {
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
+	Token           string `json:"token"`
 }

@@ -1,53 +1,65 @@
 package recovery
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"github.com/CienciaArgentina/go-email-sender/commons"
 	"github.com/CienciaArgentina/go-email-sender/defines"
 	"github.com/CienciaArgentina/go-enigma/config"
+	domain "github.com/CienciaArgentina/go-enigma/internal"
 	"github.com/CienciaArgentina/go-enigma/internal/encryption"
 	"net/http"
 )
 
-type Service interface {
-	SendConfirmationEmail(userId int64) (bool, error)
-	ConfirmEmail(email string, token string) (bool, error)
-	ResendEmailConfirmationEmail(email string) (bool, error)
-	SendUsername(email string) (bool, error)
-	SendPasswordReset(email string) (bool, error)
-	SendEmailWithApiCall(dto *commons.DTO) (bool, error)
-	ResetPassword(email, password, confirmPassword, token string) (bool, error)
-}
+const (
+	ErrEmailByUserIdFetchCode = "cant_fetch_email"
+
+	// Email verification
+	ErrEmailAlreadyVerified            = "El mail ya se encuentra confirmado"
+	ErrEmailAlreadyVerifiedCode = "verified_email"
+
+	// Sending email failed
+	ErrEmailSendingFailed = "El envío de email falló"
+	ErrEmailSendingFailedCode = "failed_email_send"
+
+	// Empty field
+	ErrEmailValidationFailed           = "La validación del email falló por algún campo vacío"
+	ErrEmailValidationFailedCode = "empty_field_validating"
+
+	ErrPasswordConfirmationDoesntMatch = "Los passwords ingresados no son idénticos"
+	ErrPasswordConfirmationDoesntMatchCode = "password_mismatch"
+
+	ErrPasswordTokenIsNotValid         = "El token para resetear la contraseña no es válido"
+	ErrPasswordTokenIsNotValidCode = "invalid_token"
+)
 
 type recoveryService struct {
-	repo Repository
-	cfg  *config.Configuration
+	repository RecoveryRepository
+	cfg *config.Configuration
 }
 
-func NewService(r Repository, c *config.Configuration) Service {
-	return &recoveryService{repo: r, cfg: c}
-}
-
-func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
-	if userId == 0 {
-		return false, config.ErrEmptyUserId
+func NewService(cfg *config.Configuration, r RecoveryRepository) RecoveryService {
+	return &recoveryService{
+		repository: r,
+		cfg:        cfg,
 	}
+}
 
-	verificationToken, userEmail, err := r.repo.GetEmailByUserId(userId)
+func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, apierror.ApiError) {
+	verificationToken, userEmail, err := r.repository.GetEmailByUserId(userId)
 	if err != nil {
 		// TODO: log this
-		return false, config.ErrUnexpectedError
+		return false, err
 	}
 
-	// If the email or user doesn't exist we should tell the user that an email has been sent IF the email exist. Just to preserve users privacy
-	if verificationToken == "" || userEmail == nil || userEmail == (&UserEmail{}) {
+	// If the email or register doesn't exist we should tell the register that an email has been sent IF the email exist. Just to preserve users privacy
+	if verificationToken == "" || userEmail == nil || userEmail == (&domain.UserEmail{}) {
 		return true, nil
 	}
 
 	if userEmail.VerfiedEmail {
-		return false, config.ErrEmailAlreadyVerified
+		return false, apierror.New(http.StatusBadRequest, ErrEmailAlreadyVerified, apierror.NewErrorCause(ErrEmailAlreadyVerified, ErrEmailAlreadyVerifiedCode))
 	}
 
 	url := fmt.Sprintf("%s%s%s?email=%s&token=%s", r.cfg.Microservices.BaseUrl, r.cfg.Microservices.UsersEndpoints.BaseResource, r.cfg.UsersEndpoints.ConfirmEmail,
@@ -55,20 +67,20 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	sent, err := r.SendEmailWithApiCall(emailDto)
-	if err != nil || !sent {
-		return sent, err
+	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
+	if e != nil || !sent {
+		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
 	}
 
 	return true, nil
 }
 
-func (r *recoveryService) ConfirmEmail(email string, token string) (bool, error) {
+func (r *recoveryService) ConfirmEmail(email string, token string) (bool, apierror.ApiError) {
 	if email == "" || token == "" {
-		return false, config.ErrEmailValidationFailed
+		return false, apierror.New(http.StatusBadRequest, ErrEmailValidationFailed, apierror.NewErrorCause(ErrEmailValidationFailed, ErrEmailValidationFailedCode))
 	}
 
-	err := r.repo.ConfirmUserEmail(email, token)
+	err := r.repository.ConfirmUserEmail(email, token)
 	if err != nil {
 		return false, err
 	}
@@ -76,12 +88,12 @@ func (r *recoveryService) ConfirmEmail(email string, token string) (bool, error)
 	return true, nil
 }
 
-func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, error) {
+func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, config.ErrEmptyEmail
+		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
 	}
 
-	userId, err := r.repo.GetuserIdByEmail(email)
+	userId, err := r.repository.GetuserIdByEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -94,32 +106,32 @@ func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, erro
 	return sent, nil
 }
 
-func (r *recoveryService) SendUsername(email string) (bool, error) {
+func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, config.ErrEmptyEmail
+		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
 	}
 
-	username, err := r.repo.GetUsernameByEmail(email)
+	username, err := r.repository.GetUsernameByEmail(email)
 	if err != nil {
 		return false, err
 	}
 
 	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
 
-	sent, err := r.SendEmailWithApiCall(emailDto)
-	if err != nil || !sent {
-		return sent, err
+	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
+	if e != nil || !sent {
+		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
 	}
 
 	return sent, nil
 }
 
-func (r *recoveryService) SendPasswordReset(email string) (bool, error) {
+func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, config.ErrEmptyEmail
+		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
 	}
 
-	securityToken, err := r.repo.GetSecurityToken(email)
+	securityToken, err := r.repository.GetSecurityToken(email)
 	if err != nil {
 		return false, err
 	}
@@ -129,45 +141,46 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, error) {
 
 	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
 
-	sent, err := r.SendEmailWithApiCall(emailDto)
-	if err != nil || !sent {
-		return sent, err
+	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
+	if e != nil || !sent {
+		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
 	}
 
 	return sent, nil
 }
 
-func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, error) {
+func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, apierror.ApiError) {
 	if email == "" || password == "" || confirmPassword == "" || token == "" {
-		return false, config.ErrEmptyField
+		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
 	}
 
 	if password != confirmPassword {
-		return false, config.ErrPasswordConfirmationDoesntMatch
+		return false, apierror.New(http.StatusBadRequest, ErrPasswordConfirmationDoesntMatch, apierror.NewErrorCause(ErrPasswordConfirmationDoesntMatch,
+			ErrPasswordConfirmationDoesntMatchCode))
 	}
 
-	securityToken, err := r.repo.GetSecurityToken(email)
+	securityToken, err := r.repository.GetSecurityToken(email)
 	if err != nil {
 		return false, err
 	}
 
 	if token != securityToken {
-		return false, config.ErrPasswordTokenIsNotValid
+		return false, apierror.New(http.StatusBadRequest, ErrPasswordTokenIsNotValid, apierror.NewErrorCause(ErrPasswordTokenIsNotValid, ErrPasswordTokenIsNotValidCode))
 	}
 
-	newHashedPassword, err := encryption.GenerateEncodedHash(password, r.cfg)
-	if err != nil {
-		return false, err
+	newHashedPassword, e := encryption.GenerateEncodedHash(password, r.cfg)
+	if e != nil {
+		return false, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(e.Error(), encryption.ErrFailedDecryptionCode))
 	}
 
 	newSecurityToken := encryption.GenerateSecurityToken(password, r.cfg)
 
-	userId, err := r.repo.GetuserIdByEmail(email)
+	userId, err := r.repository.GetuserIdByEmail(email)
 	if err != nil {
 		return false, err
 	}
 
-	updated, err := r.repo.UpdatePasswordHash(userId, newHashedPassword)
+	updated, err := r.repository.UpdatePasswordHash(userId, newHashedPassword)
 	if err != nil {
 		return false, err
 	}
@@ -179,13 +192,13 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 			Template: "passwordresetnotification",
 		}
 
-		_, err = r.SendEmailWithApiCall(&emailDto)
-		if err != nil {
-			// TODO: LOG THIS
+		_, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, &emailDto)
+		if e != nil {
+			// log this
 		}
 	}
 
-	_, err = r.repo.UpdateSecurityToken(userId, newSecurityToken)
+	_, err = r.repository.UpdateSecurityToken(userId, newSecurityToken)
 	if err != nil {
 		// TODO: LOG THIS
 	}
@@ -193,16 +206,11 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 	return updated, nil
 }
 
-func (r *recoveryService) SendEmailWithApiCall(dto *commons.DTO) (bool, error) {
-	jsonBody, err := json.Marshal(dto)
+func (r *recoveryService) GetUserByUserId(userId int64) (*domain.User, apierror.ApiError) {
+	usr, err := r.repository.GetUserByUserId(userId)
 	if err != nil {
-		return false, config.ErrUnexpectedError
+		return nil, err
 	}
 
-	resp, err := http.Post(fmt.Sprintf("%s%s", r.cfg.EmailSenderAddr, r.cfg.EmailSenderEndpoints.SendEmail), "application/json", bytes.NewBuffer(jsonBody))
-
-	if err != nil || resp.StatusCode != http.StatusOK {
-		return false, config.ErrEmailSendServiceNotWorking
-	}
-	return true, nil
+	return usr, nil
 }

@@ -1,4 +1,4 @@
-package login
+package domain
 
 import (
 	"github.com/go-sql-driver/mysql"

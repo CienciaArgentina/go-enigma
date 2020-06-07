@@ -1,37 +1,51 @@
 package rest
 
 import (
-	"errors"
+	"github.com/CienciaArgentina/go-enigma/config"
+	"github.com/CienciaArgentina/go-enigma/internal/infrastructure"
+	"github.com/CienciaArgentina/go-enigma/internal/login"
+	"github.com/CienciaArgentina/go-enigma/internal/recovery"
+	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strconv"
 	"strings"
 )
 
-var (
-	Router       *gin.Engine
-	errEmptyBody = errors.New("El cuerpo del request no puede estar vacío")
-)
-
-func InitRouter(h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) *gin.Engine {
-	r := gin.Default()
-	MapRoutes(r, h, ur, l, rc, lc)
-	return r
+func InitRouter(cfg *config.Configuration) *gin.Engine {
+	router := gin.Default()
+	MapRoutes(router, cfg)
+	return router
 }
 
-func MapRoutes(r *gin.Engine, h *healthController, ur *registerController, l *loginController, rc *recoveryController, lc *listingontroller) {
+func MapRoutes(r *gin.Engine, cfg *config.Configuration) {
+	db := infrastructure.New(cfg)
+
+	registerRepo := register.NewRepository(db)
+	registerSvc := register.NewService(cfg, db, nil, registerRepo)
+	registerCtrl := register.NewController(registerSvc)
+
+	loginRepo := login.NewRepository(db)
+	loginSvc := login.NewService(cfg, nil, loginRepo)
+	loginCtrl := login.NewController(loginSvc)
+
+	recoveryRepo := recovery.NewRepository(db)
+	recoverySvc := recovery.NewService(cfg, recoveryRepo)
+	recoveryCtrl := recovery.NewController(recoverySvc)
+
 	user := r.Group("/users")
 	{
-		user.POST("/", ur.SignUp)
-		user.POST("/login", l.Login)
-		user.POST("/confirmpasswordreset", rc.ConfirmPasswordReset)
+		user.POST("/", registerCtrl.SignUp)
+		user.POST("/login", loginCtrl.Login)
+		user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
 		user.GET("/:id", func(c *gin.Context) {
-			GetHandler(c, h, rc, lc)
+			GetHandler(c, recoveryCtrl)
 		})
 	}
 }
 
-// I have to do this just because gin works like shit
-func GetHandler(c *gin.Context, h *healthController, rc *recoveryController, lc *listingontroller) {
+// I have to do this just because gin router can't handle REST standards
+func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	id := c.Param("id")
 
 	if strings.HasPrefix(c.Request.RequestURI, "/sendconfirmationemail") {
@@ -39,7 +53,7 @@ func GetHandler(c *gin.Context, h *healthController, rc *recoveryController, lc 
 		rc.SendConfirmationEmail(c)
 	} else if _, err := strconv.Atoi(id); err == nil {
 		// /users/1
-		lc.GetUserByUserId(c)
+		rc.GetUserByUserId(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/confirmemail") {
 		// /users/confirmemail
 		rc.ConfirmEmail(c)
@@ -54,6 +68,10 @@ func GetHandler(c *gin.Context, h *healthController, rc *recoveryController, lc 
 		rc.SendPasswordReset(c)
 	} else if strings.HasPrefix(c.Request.RequestURI, "/ping") {
 		// /users/ping
-		h.Ping(c)
+		Ping(c)
 	}
+}
+
+func Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, "pong")
 }
