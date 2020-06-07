@@ -2,7 +2,7 @@ package rest
 
 import (
 	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/CienciaArgentina/go-enigma/internal/infraestructure"
+	"github.com/CienciaArgentina/go-enigma/internal/infrastructure"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
@@ -19,7 +19,7 @@ func InitRouter(cfg *config.Configuration) *gin.Engine {
 }
 
 func MapRoutes(r *gin.Engine, cfg *config.Configuration) {
-	db := infraestructure.New(cfg)
+	db := infrastructure.New(cfg)
 
 	registerRepo := register.NewRepository(db)
 	registerSvc := register.NewService(cfg, db, nil, registerRepo)
@@ -44,7 +44,7 @@ func MapRoutes(r *gin.Engine, cfg *config.Configuration) {
 	}
 }
 
-// I have to do this just because gin works like shit
+// I have to do this just because gin router can't handle REST standards
 func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	id := c.Param("id")
 
