@@ -46,3 +46,10 @@ steps:
     codeCoverageTool: Cobertura 
     summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage.xml
     reportDirectory: $(System.DefaultWorkingDirectory)/coverage
+
+- task: BuildQualityChecks@7
+  inputs:
+    checkCoverage: true
+    coverageFailOption: 'fixed'
+    coverageType: 'lines'
+    coverageThreshold: '60'
