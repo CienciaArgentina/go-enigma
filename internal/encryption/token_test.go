@@ -10,9 +10,9 @@ func TestGenerateRandomBytes(t *testing.T) {
 	require.NotNil(t, b)
 }
 
-
-func TestGenerateRandomBytesNotPanics(t *testing.T) {
-	require.NotPanics(t, func() {
-		GenerateRandomBytes(1)
-	})
-}
+//
+//func TestGenerateRandomBytesNotPanics(t *testing.T) {
+//	require.NotPanics(t, func() {
+//		GenerateRandomBytes(1)
+//	})
+//}
