@@ -1,0 +1,47 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+pr:
+  branches:
+    include:
+    - 'develop'
+
+pool:
+  vmImage: 'ubuntu-latest'
+variables:
+  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+
+steps: 
+- task: GoTool@0
+  inputs:
+    version: '1.13.5'
+
+- script: |
+    export PATH=$PATH:$(GOBIN)
+    echo $PATH
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u github.com/matm/gocov-html
+    go test -v -coverprofile=coverage.txt -covermode count ./... 2>&1 | go-junit-report > report.xml
+    gocov convert coverage.txt > coverage.json
+    gocov-xml < coverage.json > coverage.xml
+    mkdir coverage
+    gocov-html < coverage.json > coverage/index.html
+    curl -s https://codecov.io/bash | bash -s -- -c -F aFlag -f $(System.DefaultWorkingDirectory)/coverage.txt -t $(CODECOV_TOKEN) -C $(Build.SourceVersion)
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: 'Run unit test'
+
+- task: PublishTestResults@2
+  inputs:
+    testRunner: JUnit
+    testResultsFiles: $(System.DefaultWorkingDirectory)/report.xml
+
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: Cobertura 
+    summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage.xml
+    reportDirectory: $(System.DefaultWorkingDirectory)/coverage
