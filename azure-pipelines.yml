@@ -15,19 +15,27 @@ steps:
 - task: GoTool@0
   inputs:
     version: '1.13.5'
-- task: Go@0
+
+- script: |
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u gopkg.in/matm/v1/gocov-html
+    go test -v -coverprofile=coverage.txt -covermode count ./... 2>&1 | go-junit-report > report.xml
+    gocov convert coverage.txt > coverage.json
+    gocov-xml < coverage.json > coverage.xml
+    mkdir coverage
+    gocov-html < coverage.json > coverage/index.html
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: 'Run unit test'
+
+- task: PublishTestResults@2
   inputs:
-    command: 'get'
-    arguments: '-d'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-- task: Go@0
+    testRunner: JUnit
+    testResultsFiles: $(System.DefaultWorkingDirectory)/**/report.xml
+
+- task: PublishCodeCoverageResults@1
   inputs:
-    command: 'test'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-    arguments: '-v -coverprofile=coverage.txt -covermode count ./... 2>&1 | go-junit-report > report.xml'
-- task: CopyFiles@2
-  inputs:
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-- task: PublishBuildArtifacts@1
-  inputs:
-     artifactName: drop
+    codeCoverageTool: Cobertura 
+    summaryFileLocation: $(System.DefaultWorkingDirectory)/**/coverage.xml
+    reportDirectory: $(System.DefaultWorkingDirectory)/**/coverage
