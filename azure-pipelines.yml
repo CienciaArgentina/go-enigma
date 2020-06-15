@@ -10,6 +10,11 @@ pr:
 
 pool:
   vmImage: 'ubuntu-latest'
+variables:
+
+  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+  PATH: '$(GOBIN):$(PATH)'
 
 steps: 
 - task: GoTool@0
