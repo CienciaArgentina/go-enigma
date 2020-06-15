@@ -31,7 +31,7 @@ steps:
     gocov-xml < coverage.json > coverage.xml
     mkdir coverage
     gocov-html < coverage.json > coverage/index.html
-    curl -s https://codecov.io/bash | bash -s -- -c -F aFlag -f $(System.DefaultWorkingDirectory)/report.xml
+    curl -s https://codecov.io/bash | bash -s -- -c -F aFlag -f $(System.DefaultWorkingDirectory)/coverage.txt
   workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: 'Run unit test'
 
