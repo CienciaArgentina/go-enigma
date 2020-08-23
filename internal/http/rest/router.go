@@ -1,6 +1,11 @@
 package rest
 
 import (
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+
 	config2 "github.com/CienciaArgentina/go-backend-commons/config"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/injector"
@@ -9,10 +14,6 @@ import (
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
 )
 
 func InitRouter() *gin.Engine {
@@ -57,29 +58,29 @@ func MapRoutes(r *gin.Engine) {
 	}
 }
 
-// I have to do this just because gin router can't handle REST standards
+// I have to do this just because gin router can't handle REST standards.
 func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	id := c.Param("id")
 
-	if strings.HasPrefix(c.Request.RequestURI, "sendconfirmationemail") {
+	if strings.Contains(c.Request.RequestURI, "sendconfirmationemail") {
 		// /users/sendconfirmationemail
 		rc.SendConfirmationEmail(c)
 	} else if _, err := strconv.Atoi(id); err == nil {
 		// /users/1
 		rc.GetUserByUserId(c)
-	} else if strings.HasPrefix(c.Request.RequestURI, "confirmemail") {
+	} else if strings.Contains(c.Request.RequestURI, "confirmemail") {
 		// /users/confirmemail
 		rc.ConfirmEmail(c)
-	} else if strings.HasPrefix(c.Request.RequestURI, "resendconfirmationemail") {
+	} else if strings.Contains(c.Request.RequestURI, "resendconfirmationemail") {
 		// /users/resendconfirmationemail
 		rc.ResendEmailConfirmation(c)
-	} else if strings.HasPrefix(c.Request.RequestURI, "forgotusername") {
+	} else if strings.Contains(c.Request.RequestURI, "forgotusername") {
 		// /users/forgotusername
 		rc.ForgotUsername(c)
-	} else if strings.HasPrefix(c.Request.RequestURI, "sendpasswordreset") {
+	} else if strings.Contains(c.Request.RequestURI, "sendpasswordreset") {
 		// /users/sendpasswordreset
 		rc.SendPasswordReset(c)
-	} else if strings.HasPrefix(c.Request.RequestURI, "ping") {
+	} else if strings.Contains(c.Request.RequestURI, "ping") {
 		// /users/ping
 		Ping(c)
 	}
