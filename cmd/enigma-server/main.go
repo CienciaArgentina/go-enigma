@@ -8,7 +8,7 @@ import (
 func main() {
 	clog.SetLogLevel(clog.InfoLevel)
 
-	if err := rest.InitRouter().Run(":8080"); err != nil {
+	if err := rest.InitRouter().Run(); err != nil {
 		clog.Panic("Error starting app", "main", err, nil)
 	}
 }
