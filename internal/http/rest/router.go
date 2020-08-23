@@ -82,9 +82,6 @@ func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	} else if strings.Contains(c.Request.RequestURI, "sendpasswordreset") {
 		// /users/sendpasswordreset
 		rc.SendPasswordReset(c)
-	} else if strings.Contains(c.Request.RequestURI, "ping") {
-		// /users/ping
-		Ping(c)
 	}
 }
 
