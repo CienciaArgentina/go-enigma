@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . /app
 
-WORKDIR /app/cmd/enigma-server
+WORKDIR /app
 
 RUN \
     CGO_ENABLED=0 \
@@ -24,4 +24,4 @@ FROM scratch
 
 WORKDIR /app
 COPY --from=builder /app .
-ENTRYPOINT ["/app/cmd/enigma-server/main"]
+ENTRYPOINT ["/app/main"]
