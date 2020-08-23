@@ -10,6 +10,8 @@ RUN go mod download
 
 COPY . /app
 
+WORKDIR /app/cmd/enigma-server
+
 RUN \
     CGO_ENABLED=0 \
     GOOS=linux \
