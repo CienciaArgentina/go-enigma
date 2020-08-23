@@ -47,15 +47,14 @@ func MapRoutes(r *gin.Engine) {
 	recoverySvc := recovery.NewService(enigmaConfig, recoveryRepo)
 	recoveryCtrl := recovery.NewController(recoverySvc)
 
-	user := r.Group("/users")
-	{
-		user.POST("/", registerCtrl.SignUp)
-		user.POST("/login", loginCtrl.Login)
-		user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
-		user.GET("/:id", func(c *gin.Context) {
-			GetHandler(c, recoveryCtrl)
-		})
-	}
+	r.GET("/ping", Ping)
+
+	r.POST("/", registerCtrl.SignUp)
+	r.POST("/login", loginCtrl.Login)
+	r.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
+	r.GET("/:id", func(c *gin.Context) {
+		GetHandler(c, recoveryCtrl)
+	})
 }
 
 // I have to do this just because gin router can't handle REST standards.
