@@ -2,44 +2,47 @@ package recovery
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"github.com/CienciaArgentina/go-email-sender/commons"
 	"github.com/CienciaArgentina/go-email-sender/defines"
 	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/CienciaArgentina/go-enigma/internal/encryption"
-	"net/http"
 )
 
 const (
 	ErrEmailByUserIdFetchCode = "cant_fetch_email"
 
-	// Email verification
-	ErrEmailAlreadyVerified            = "El mail ya se encuentra confirmado"
+	// Email verification.
+	ErrEmailAlreadyVerified     = "El mail ya se encuentra confirmado"
 	ErrEmailAlreadyVerifiedCode = "verified_email"
 
-	// Sending email failed
-	ErrEmailSendingFailed = "El envío de email falló"
+	// Sending email failed.
+	ErrEmailSendingFailed     = "El envío de email falló"
 	ErrEmailSendingFailedCode = "failed_email_send"
 
-	// Empty field
-	ErrEmailValidationFailed           = "La validación del email falló por algún campo vacío"
+	// Empty field.
+	ErrEmailValidationFailed     = "La validación del email falló por algún campo vacío"
 	ErrEmailValidationFailedCode = "empty_field_validating"
 
-	ErrPasswordConfirmationDoesntMatch = "Los passwords ingresados no son idénticos"
+	ErrPasswordConfirmationDoesntMatch     = "Los passwords ingresados no son idénticos"
 	ErrPasswordConfirmationDoesntMatchCode = "password_mismatch"
 
-	ErrPasswordTokenIsNotValid         = "El token para resetear la contraseña no es válido"
+	ErrPasswordTokenIsNotValid     = "El token para resetear la contraseña no es válido"
 	ErrPasswordTokenIsNotValidCode = "invalid_token"
+
+	errFailedDecryptionCode = "failed_decryption"
 )
 
 type recoveryService struct {
 	repository RecoveryRepository
-	cfg *config.Configuration
+	cfg        *config.EnigmaConfig
 }
 
-func NewService(cfg *config.Configuration, r RecoveryRepository) RecoveryService {
+func NewService(cfg *config.EnigmaConfig, r RecoveryRepository) RecoveryService {
 	return &recoveryService{
 		repository: r,
 		cfg:        cfg,
@@ -90,7 +93,7 @@ func (r *recoveryService) ConfirmEmail(email string, token string) (bool, apierr
 
 func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
 	}
 
 	userId, err := r.repository.GetuserIdByEmail(email)
@@ -108,7 +111,7 @@ func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, apie
 
 func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
 	}
 
 	username, err := r.repository.GetUsernameByEmail(email)
@@ -128,7 +131,7 @@ func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 
 func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyEmailCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
 	}
 
 	securityToken, err := r.repository.GetSecurityToken(email)
@@ -151,7 +154,7 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiErr
 
 func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, apierror.ApiError) {
 	if email == "" || password == "" || confirmPassword == "" || token == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
 	}
 
 	if password != confirmPassword {
@@ -170,10 +173,13 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 
 	newHashedPassword, e := encryption.GenerateEncodedHash(password, r.cfg)
 	if e != nil {
-		return false, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(e.Error(), encryption.ErrFailedDecryptionCode))
+		return false, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(e.Error(), errFailedDecryptionCode))
 	}
 
-	newSecurityToken := encryption.GenerateSecurityToken(password, r.cfg)
+	newSecurityToken, errVal := encryption.GenerateSecurityToken(password, r.cfg)
+	if errVal != nil {
+		return false, apierror.NewInternalServerApiError(errVal.Error(), errVal, "security_token_err")
+	}
 
 	userId, err := r.repository.GetuserIdByEmail(email)
 	if err != nil {

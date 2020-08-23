@@ -2,9 +2,11 @@ package register
 
 import (
 	"database/sql"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/jmoiron/sqlx"
 	"strings"
+
+	domain2 "github.com/CienciaArgentina/go-enigma/internal/domain"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type registerRepository struct {
@@ -15,8 +17,8 @@ func NewRepository(db *sqlx.DB) RegisterRepository {
 	return &registerRepository{db: db}
 }
 
-func (u *registerRepository) GetUserById(userId int64) (*domain.User, error) {
-	var usr *domain.User
+func (u *registerRepository) GetUserById(userId int64) (*domain2.User, error) {
+	var usr *domain2.User
 
 	err := u.db.Get(&usr, "SELECT username FROM users WHERE user_id = ?", userId)
 	if err != nil {
@@ -30,16 +32,14 @@ func (u *registerRepository) GetUserById(userId int64) (*domain.User, error) {
 	return usr, nil
 }
 
-func (u *registerRepository) AddUser(tx *sqlx.Tx, usr *domain.User) (int64, error) {
+func (u *registerRepository) AddUser(tx *sqlx.Tx, usr *domain2.User) (int64, error) {
 	res, err := tx.Exec("INSERT INTO users (username, normalized_username, password_hash,  date_created, verification_token, security_token) VALUES (?, ?, ?, now(), ?, ?)",
 		usr.Username, usr.NormalizedUsername, usr.PasswordHash, usr.VerificationToken, usr.SecurityToken)
-
 	if err != nil {
 		return 0, err
 	}
 
 	lastId, err := res.LastInsertId()
-
 	if err != nil {
 		return 0, err
 	}
@@ -47,15 +47,13 @@ func (u *registerRepository) AddUser(tx *sqlx.Tx, usr *domain.User) (int64, erro
 	return lastId, err
 }
 
-func (u *registerRepository) AddUserEmail(tx *sqlx.Tx, e *domain.UserEmail) (int64, error) {
+func (u *registerRepository) AddUserEmail(tx *sqlx.Tx, e *domain2.UserEmail) (int64, error) {
 	res, err := tx.Exec("INSERT INTO users_email (user_id, email, normalized_email, date_created) VALUES (?, ?, ?, now())", e.UserId, e.Email, e.NormalizedEmail)
-
 	if err != nil {
 		return 0, err
 	}
 
 	lastId, err := res.LastInsertId()
-
 	if err != nil {
 		return 0, err
 	}

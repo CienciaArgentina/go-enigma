@@ -2,78 +2,35 @@ package config
 
 import (
 	"errors"
-	"fmt"
-	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/scope"
 )
 
 const (
-	GoEnvironment = "GO_ENVIRONMENT"
-	Scope         = "SCOPE"
+	envPasswordHashing  = "PASSWORD_HASHING_KEY"
+	envArgonMemory      = "ARGON_MEMORY"
+	envArgonIterations  = "ARGON_ITERATIONS"
+	envArgonParallelism = "ARGON_PARALLELISM"
+	envArgonSaltLength  = "ARGON_SALT_LENGTH"
+	envArgonKeyLength   = "ARGON_KEY_LENGTH"
 
-	Production  = "production"
-	Test        = "test"
-	Development = "development"
+	defaultArgonMemory      = 65536
+	defaultArgonIterations  = 2
+	defaultArgonParallelism = 1
+	defaultArgonSaltLength  = 32
+	defaultArgonKeyLength   = 32
 )
 
-var (
-	Config *Configuration
-
-	errNotEvenDefaultConfiguration = fmt.Errorf("No es posible generar configuración default ya que el scope es %s", os.Getenv(Scope))
-
-	ErrInvalidHash         = errors.New("El hash no usa el encoding correcto")
-	ErrIncompatibleVersion = errors.New("Versión de argon2 incompatible")
-
-	ErrEmptyUserId                     = errors.New("El userId no puede estar vacío")
-	ErrEmailAlreadyRegistered          = errors.New("Este email ya se encuentra registrado en nuestra base de datos")
-	ErrUsernameAlreadyRegistered       = errors.New("Este nombre de usuario ya se encuentra registrado")
-
-
-	ErrEmailSendServiceNotWorking      = errors.New("Por alguna razón el servicio de envío de emails falló")
-
-
-
-
-
-	ErrEmptySearch                     = errors.New("La búsqueda no arrojó ningún resultado")
-)
-
-const (
-	// Request
-	ErrInvalidBody     = "El cuerpo del mensaje que intentás enviar no es válido"
-	ErrInvalidBodyCode = "invalid_body"
-
-	// Empty
-	ErrEmptyField                      = "Hay algún campo vacío y no puede estarlo"
-	ErrEmptyFieldCode = "empty_field"
-	ErrEmptyUsername            = "El nombre de usuario no puede estar vacío"
-	ErrEmptyPassword            = "La contraseña no puede estar vacía"
-	ErrEmptyEmail               = "El email no puede estar vacío"
-	ErrEmptyEmailCode = "empty_email"
-	ErrEmptyFieldUserCodeSignup = "invalid_user_signup"
-	ErrEmptyFieldUserCodeLogin  = "invalid_user_login"
-
-	// General
-	ErrUnexpectedError                 = "Ocurrió un error en el sistema, por favor, ponete en contacto con sistemas"
-)
-
-type Configuration struct {
-	AppName string `yaml:"appname"`
-	Database      `yaml:"database"`
-	Server        `yaml:"server"`
-	Keys          `yaml:"keys"`
-	Microservices `yaml:"microservices"`
-	ArgonParams   `yaml:"argonparams"`
-}
-
-type Database struct {
-	Username string `yaml:"db_username"`
-	Password string `envconfig:"ENV_DB_PASSWORD"`
-	Hostname string `envconfig:"ENV_DB_HOSTNAME"`
-	Port     string `yaml:"db_port"`
-	Database string `envconfig:"ENV_DB_NAME"`
+type EnigmaConfig struct {
+	Keys            *Keys
+	ArgonParams     *ArgonParams
+	RegisterOptions *RegisterOptions
+	LoginOptions    *LoginOptions
+	Microservices
 }
 
 type Server struct {
@@ -81,11 +38,11 @@ type Server struct {
 }
 
 type Keys struct {
-	PasswordHashingKey string `env:"ENV_KEY_PASSWORDHASHING"`
+	PasswordHashingKey string
 }
 
 type Microservices struct {
-	Scheme string `yaml:"scheme"`
+	Scheme         string `yaml:"scheme"`
 	BaseUrl        string `yaml:"base_url"`
 	UsersEndpoints struct {
 		BaseResource          string `yaml:"base_resource"`
@@ -102,11 +59,11 @@ type Microservices struct {
 }
 
 type ArgonParams struct {
-	Memory      uint32 `yaml:"memory"`
-	Iterations  uint32 `yaml:"iterations"`
-	Parallelism uint8  `yaml:"parallelism"`
-	SaltLength  uint32 `yaml:"salt_length"`
-	KeyLength   uint32 `yaml:"key_length"`
+	Parallelism uint8
+	Memory      uint32
+	Iterations  uint32
+	SaltLength  uint32
+	KeyLength   uint32
 }
 
 type RegisterOptions struct {
@@ -144,73 +101,94 @@ type LoginOptions struct {
 	}
 }
 
-func DefaultConfiguration() *Configuration {
-	// Even though it's kind of difficult to get to this point, I made this function so I'm sure that I'm always connected to a development scope
-	if os.Getenv(GoEnvironment) != Production && os.Getenv(Scope) != Production {
-		return &Configuration{
-			Database: Database{
-				Username: "cienciaArgentinaDev",
-				Password: "cienciaArgentina",
-				Hostname: "localhost",
-				Port:     "3306",
-				Database: "cienciaargentinaauthdev",
-			},
-			Server: Server{
-				Port: ":8080",
-			},
-			Keys: Keys{
-				// This is just for a development scope
-				PasswordHashingKey: "98616F779CAA278695ADAF88BF4C1",
-			},
-			ArgonParams: ArgonParams{
-				Memory:      65536,
-				Iterations:  2,
-				Parallelism: 1,
-				SaltLength:  32,
-				KeyLength:   32,
-			},
+func NewEnigmaConfig() (*EnigmaConfig, error) {
+	cfg := &EnigmaConfig{}
+
+	var err error
+	cfg.Keys = &Keys{}
+	cfg.Keys.PasswordHashingKey, err = cfg.getPasswordHashingKey()
+	if err != nil {
+		clog.Panic(err.Error(), "get-password-hashing-key", err, nil)
+		return nil, err
+	}
+	cfg.ArgonParams = &ArgonParams{}
+	cfg.ArgonParams, err = cfg.getArgonParams()
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func (e *EnigmaConfig) getPasswordHashingKey() (string, error) {
+	hash := os.Getenv(envPasswordHashing)
+	if hash == "" {
+		msg := "password hashing key is empty"
+		err := errors.New(msg)
+		return "", err
+	}
+
+	return hash, nil
+}
+
+func (e *EnigmaConfig) getArgonParams() (*ArgonParams, error) {
+	params := &ArgonParams{}
+
+	memory := os.Getenv(envArgonMemory)
+	iterations := os.Getenv(envArgonIterations)
+	parallelism := os.Getenv(envArgonParallelism)
+	saltLen := os.Getenv(envArgonSaltLength)
+	keyLen := os.Getenv(envArgonKeyLength)
+
+	if !scope.IsProductiveScope() {
+		params.Memory = defaultArgonMemory
+		params.Iterations = defaultArgonIterations
+		params.Parallelism = defaultArgonParallelism
+		params.SaltLength = defaultArgonSaltLength
+		params.KeyLength = defaultArgonKeyLength
+	} else {
+		if memory == "" || iterations == "" || parallelism == "" || saltLen == "" || keyLen == "" {
+			msg := "argon params are empty"
+			err := errors.New(msg)
+			clog.Panic(msg, "get-argon-params", err, map[string]string{"memory": memory, "iterations": iterations, "parallelism": parallelism, "salt": saltLen, "key": keyLen})
+			return nil, err
 		}
+
+		mem, err := strconv.ParseInt(memory, 10, 32)
+		if err != nil {
+			clog.Panic("Memory cannot be casted", "get-argon-params", err, nil)
+			return nil, err
+		}
+		params.Memory = uint32(mem)
+
+		it, err := strconv.ParseInt(iterations, 10, 32)
+		if err != nil {
+			clog.Panic("Iterations cannot be casted", "get-argon-params", err, nil)
+			return nil, err
+		}
+		params.Iterations = uint32(it)
+
+		para, err := strconv.ParseInt(parallelism, 10, 8)
+		if err != nil {
+			clog.Panic("Parallelism cannot be casted", "get-argon-params", err, nil)
+			return nil, err
+		}
+		params.Parallelism = uint8(para)
+
+		salt, err := strconv.ParseInt(saltLen, 10, 8)
+		if err != nil {
+			clog.Panic("Salt Length cannot be casted", "get-argon-params", err, nil)
+			return nil, err
+		}
+		params.SaltLength = uint32(salt)
+
+		key, err := strconv.ParseInt(keyLen, 10, 8)
+		if err != nil {
+			clog.Panic("Salt Length cannot be casted", "get-argon-params", err, nil)
+			return nil, err
+		}
+		params.KeyLength = uint32(key)
 	}
 
-	panic(errNotEvenDefaultConfiguration)
-
-	//pwd, err := os.Getwd()
-	//files, _ := ioutil.ReadDir(pwd)
-	//var sb strings.Builder
-	//for _, f := range files {
-	//	sb.WriteString(fmt.Sprintf("- %s \n", f.Name()))
-	//}
-	//panic(fmt.Sprintf("LS:  %s \n | WD: %s", sb.String(), pwd))
-}
-
-func New() *Configuration {
-	config := &Configuration{}
-	scope := os.Getenv(Scope)
-	if scope == "" {
-		scope = Development
-	}
-
-	data, err := os.Open(fmt.Sprintf("./config/config.%s.yml", scope))
-	if err != nil {
-		return DefaultConfiguration()
-	}
-
-	defer data.Close()
-
-	decoder := yaml.NewDecoder(data)
-	if err := decoder.Decode(config); err != nil {
-		panic(err)
-	}
-
-	err = envconfig.Process("env_", config)
-	if err != nil {
-		return DefaultConfiguration()
-	}
-	return config
-}
-
-func ConsolePrintMessageByCienciaArgentina(msg string) {
-	statusColor := "\033[30;45m"
-	resetColor := "\033[0m"
-	fmt.Print(fmt.Sprintf("%s %v %s - %s", statusColor, "Ciencia Argentina", resetColor, msg))
+	return params, nil
 }

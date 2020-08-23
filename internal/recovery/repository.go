@@ -2,36 +2,36 @@ package recovery
 
 import (
 	"database/sql"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/jmoiron/sqlx"
 	"net/http"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
-	ErrNoUserId = "UserId inexistente"
+	ErrNoUserId     = "UserId inexistente"
 	ErrNoUserIdCode = "invalid_user_id"
 
-	ErrNoUserEmail = "Email inexistente"
+	ErrNoUserEmail     = "Email inexistente"
 	ErrNoUserEmailCode = "invalid_email"
 
-	ErrFetchingUserCode = "error_fetching_user"
-	ErrFetchingUserEmailCode  = "error_fetching_email"
+	ErrFetchingUserCode      = "error_fetching_user"
+	ErrFetchingUserEmailCode = "error_fetching_email"
 
-	ErrEmailAlreadyverified = "Este email ya se encuentra verificado"
+	ErrEmailAlreadyverified     = "Este email ya se encuentra verificado"
 	ErrEmailAlreadyverifiedCode = "email_already_verified"
 
-	ErrEmailNotVerified = "Este email no se encuentra verificado"
+	ErrEmailNotVerified     = "Este email no se encuentra verificado"
 	ErrEmailNotVerifiedCode = "email_not_verified"
 
-	ErrValidationTokenFailed           = "La validación del token falló"
+	ErrValidationTokenFailed     = "La validación del token falló"
 	ErrValidationTokenFailedCode = "token_validation_failed"
 
-	ErrUpdatingUserEmail = "Ocurrió un error al intentar actualizar el email"
+	ErrUpdatingUserEmail     = "Ocurrió un error al intentar actualizar el email"
 	ErrUpdatingUserEmailCode = "email_update_failed"
 
-	ErrUpdatingUser = "Ocurrió un error al intentar actualizar el usuario"
+	ErrUpdatingUser     = "Ocurrió un error al intentar actualizar el usuario"
 	ErrUpdatingUserCode = "user_update_failed"
 )
 
@@ -40,7 +40,7 @@ type recoveryRepository struct {
 }
 
 func NewRepository(db *sqlx.DB) RecoveryRepository {
-	return &recoveryRepository{db:db}
+	return &recoveryRepository{db: db}
 }
 
 func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.UserEmail, apierror.ApiError) {
@@ -51,7 +51,7 @@ func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.Use
 		if err == sql.ErrNoRows {
 			return "", nil, apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return "", nil, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+		return "", nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	if user == (domain.User{}) {
@@ -65,7 +65,7 @@ func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.Use
 		if err == sql.ErrNoRows {
 			return "", nil, apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
-		return "", nil, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
+		return "", nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	return user.VerificationToken, &userEmail, nil
@@ -79,7 +79,7 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 		if err == sql.ErrNoRows {
 			return apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
-		return apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
+		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	if userEmail == (domain.UserEmail{}) {
@@ -97,7 +97,7 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 		if err == sql.ErrNoRows {
 			return apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	if user == (domain.User{}) {
@@ -110,7 +110,7 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 
 	result, err := r.db.Exec("UPDATE users_email SET verified_email = 1, verification_date = now() WHERE user_id = ?", user.UserId)
 	if err != nil {
-		return apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserEmailCode))
+		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserEmailCode))
 	}
 
 	if num, _ := result.RowsAffected(); num == 0 {
@@ -128,7 +128,7 @@ func (r *recoveryRepository) GetuserIdByEmail(email string) (int64, apierror.Api
 		if err == sql.ErrNoRows {
 			return 0, apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
-		return 0, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
+		return 0, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	return userId, nil
@@ -142,7 +142,7 @@ func (r *recoveryRepository) GetUsernameByEmail(email string) (string, apierror.
 		if err == sql.ErrNoRows {
 			return "", apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
-		return "", apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
+		return "", apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	var username string
@@ -151,7 +151,7 @@ func (r *recoveryRepository) GetUsernameByEmail(email string) (string, apierror.
 		if err == sql.ErrNoRows {
 			return "", apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return "", apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+		return "", apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	return username, nil
@@ -165,7 +165,7 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.Ap
 		if err == sql.ErrNoRows {
 			return "", apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
-		return "", apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
+		return "", apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	if userEmail == (domain.UserEmail{}) {
@@ -183,7 +183,7 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.Ap
 		if err == sql.ErrNoRows {
 			return "", apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return "", apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+		return "", apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	return securityToken, nil
@@ -191,14 +191,14 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.Ap
 
 func (r *recoveryRepository) UpdatePasswordHash(userId int64, passwordHash string) (bool, apierror.ApiError) {
 	if passwordHash == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
 	}
 
 	result := r.db.MustExec("UPDATE users SET password_hash = ?  where user_id = ?", passwordHash, userId)
 
 	updatedRows, err := result.RowsAffected()
 	if err != nil {
-		return false, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
+		return false, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
 	}
 
 	if updatedRows == 0 {
@@ -210,14 +210,14 @@ func (r *recoveryRepository) UpdatePasswordHash(userId int64, passwordHash strin
 
 func (r *recoveryRepository) UpdateSecurityToken(userId int64, newSecurityToken string) (bool, apierror.ApiError) {
 	if newSecurityToken == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
+		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
 	}
 
 	result := r.db.MustExec("UPDATE users SET security_token = ? where user_id = ?", newSecurityToken, userId)
 
 	updatedRows, err := result.RowsAffected()
 	if err != nil {
-		return false, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
+		return false, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
 	}
 
 	if updatedRows == 0 {
@@ -229,7 +229,7 @@ func (r *recoveryRepository) UpdateSecurityToken(userId int64, newSecurityToken 
 
 func (r *recoveryRepository) GetUserByUserId(userId int64) (*domain.User, apierror.ApiError) {
 	if userId == 0 {
-		return nil, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode))
+		return nil, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
 	}
 
 	var usr domain.User
@@ -238,7 +238,7 @@ func (r *recoveryRepository) GetUserByUserId(userId int64) (*domain.User, apierr
 		if err == sql.ErrNoRows {
 			return nil, apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return nil, apierror.New(http.StatusInternalServerError, config.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
+		return nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	return &usr, nil

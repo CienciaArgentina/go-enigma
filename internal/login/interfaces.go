@@ -1,25 +1,26 @@
 package login
 
 import (
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/gin-gonic/gin"
 	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	domain2 "github.com/CienciaArgentina/go-enigma/internal/domain"
+	"github.com/gin-gonic/gin"
 )
 
-type LoginRepository interface {
-	GetUserByUsername(username string) (*domain.User, *domain.UserEmail, apierror.ApiError)
-	IncrementLoginFailAttempt(userId int64) error
-	ResetLoginFails(userId int64) error
-	UnlockAccount(userId int64) error
-	LockAccount(userId int64, duration time.Duration) error
+type Repository interface {
+	GetUserByUsername(username string) (*domain2.User, *domain2.UserEmail, apierror.ApiError)
+	IncrementLoginFailAttempt(userID int64) error
+	ResetLoginFails(userID int64) error
+	UnlockAccount(userID int64) error
+	LockAccount(userID int64, duration time.Duration) error
 }
 
-type LoginService interface {
-	LoginUser(user *domain.UserLoginDTO) (string, apierror.ApiError)
-	UserCanLogin(user *domain.UserLoginDTO) apierror.ApiError
+type Service interface {
+	LoginUser(user *domain2.UserLoginDTO) (string, apierror.ApiError)
+	UserCanLogin(user *domain2.UserLoginDTO) apierror.ApiError
 }
 
-type LoginController interface {
+type Controller interface {
 	Login(c *gin.Context)
 }

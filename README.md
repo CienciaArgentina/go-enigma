@@ -22,10 +22,17 @@ You **must** add the environment variables, either this won't work (ex. "develop
 The variables that the system need are:
 
 ```Bash
-    export ENV_DB_PASSWORD="value" // Database password
-    export ENV_DB_HOSTNAME="value" // Database hostname
-    export ENV_DB_NAME="value" // Database name
-    export ENV_KEY_PASSWORDHASHING="value" // used for salts, SHOULD BE AS PRIVATE AS POSSIBLE
+    export DB_USERNAME="value" // Database username
+    export DB_PASSWORD="value" // Database password
+    export DB_HOSTNAME="value" // Database hostname
+    export DB_PORT="value" // Database port
+    export DB_NAME="value" // Database name
+    export PASSWORD_HASHING_KEY="value" // used for salts, SHOULD BE AS PRIVATE AS POSSIBLE
+    export ARGON_MEMORY="value"
+    export ARGON_ITERATIONS="value"
+    export ARGON_PARALLELISM="value"
+    export ARGON_SALT_LENGTH="value"
+    export ARGON_KEY_LENGTH="value"
 ```
 
 Any other configuration should be provided in the `config.{SCOPE}.yml` file. Also, please check [working directory](#working-directory).
