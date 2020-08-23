@@ -2,17 +2,10 @@ package rest
 
 import (
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
-	config2 "github.com/CienciaArgentina/go-backend-commons/config"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/injector"
-	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
-	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,41 +16,41 @@ func InitRouter() *gin.Engine {
 }
 
 func MapRoutes(r *gin.Engine) {
-	injector.Initilize()
-
-	dbname := os.Getenv(config2.EnvDBName)
-	db := injector.GetDB(dbname).Database
-
-	enigmaConfig, err := config.NewEnigmaConfig()
-	if err != nil {
-		msg := "error building enigma config"
-		clog.Panic(msg, "map-routes", err, nil)
-		return
-	}
-
-	registerRepo := register.NewRepository(db)
-	registerSvc := register.NewService(enigmaConfig, db, registerRepo)
-	registerCtrl := register.NewController(registerSvc)
-
-	loginRepo := login.NewRepository(db)
-	loginSvc := login.NewService(enigmaConfig, loginRepo)
-	loginCtrl := login.NewController(loginSvc)
-
-	recoveryRepo := recovery.NewRepository(db)
-	recoverySvc := recovery.NewService(enigmaConfig, recoveryRepo)
-	recoveryCtrl := recovery.NewController(recoverySvc)
+	//injector.Initilize()
+	//
+	//dbname := os.Getenv(config2.EnvDBName)
+	//db := injector.GetDB(dbname).Database
+	//
+	//enigmaConfig, err := config.NewEnigmaConfig()
+	//if err != nil {
+	//	msg := "error building enigma config"
+	//	clog.Panic(msg, "map-routes", err, nil)
+	//	return
+	//}
+	//
+	//registerRepo := register.NewRepository(db)
+	//registerSvc := register.NewService(enigmaConfig, db, registerRepo)
+	//registerCtrl := register.NewController(registerSvc)
+	//
+	//loginRepo := login.NewRepository(db)
+	//loginSvc := login.NewService(enigmaConfig, loginRepo)
+	//loginCtrl := login.NewController(loginSvc)
+	//
+	//recoveryRepo := recovery.NewRepository(db)
+	//recoverySvc := recovery.NewService(enigmaConfig, recoveryRepo)
+	//recoveryCtrl := recovery.NewController(recoverySvc)
 
 	r.GET("/ping", Ping)
 
-	user := r.Group("/users")
-	{
-		user.POST("/", registerCtrl.SignUp)
-		user.POST("/login", loginCtrl.Login)
-		user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
-		user.GET("/:id", func(c *gin.Context) {
-			GetHandler(c, recoveryCtrl)
-		})
-	}
+	//user := r.Group("/users")
+	//{
+	//	user.POST("/", registerCtrl.SignUp)
+	//	user.POST("/login", loginCtrl.Login)
+	//	user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
+	//	user.GET("/:id", func(c *gin.Context) {
+	//		GetHandler(c, recoveryCtrl)
+	//	})
+	//}
 }
 
 // I have to do this just because gin router can't handle REST standards.
