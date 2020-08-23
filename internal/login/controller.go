@@ -1,18 +1,18 @@
 package login
 
 import (
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
+	"github.com/gin-gonic/gin"
 )
 
 type loginController struct {
-	svc LoginService
+	svc Service
 }
 
-func NewController(s LoginService) LoginController {
+func NewController(s Service) Controller {
 	return &loginController{svc: s}
 }
 
@@ -20,7 +20,7 @@ func (l *loginController) Login(c *gin.Context) {
 	var usr domain.UserLoginDTO
 
 	if err := c.ShouldBindJSON(&usr); err != nil {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrInvalidBody, apierror.NewErrorCause(config.ErrInvalidBody, config.ErrInvalidBodyCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrInvalidBody, apierror.NewErrorCause(domain.ErrInvalidBody, domain.ErrInvalidBodyCode)))
 		return
 	}
 

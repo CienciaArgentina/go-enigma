@@ -2,8 +2,9 @@ package domain
 
 import (
 	"database/sql"
-	"github.com/go-sql-driver/mysql"
 	"time"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type User struct {

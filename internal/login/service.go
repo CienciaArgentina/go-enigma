@@ -3,65 +3,63 @@ package login
 import (
 	"crypto/subtle"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/CienciaArgentina/go-enigma/internal/encryption"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/argon2"
-	"net/http"
-	"time"
 )
 
 const (
-	// Login
+	// Login.
 
-	// Internal server error
+	// Internal server error.
 	ErrFailedTryingToLogin = "Ocurrió un error al momento de loguear, intentá nuevamente o comunicate con sistemas"
 
-	// Failed
+	// Failed.
 	ErrInvalidLoginCode = "invalid_login"
 	ErrInvalidLogin     = "El usuario o la contraseña especificados no existe"
 
-	// Locked account
+	// Locked account.
 	ErrLockedAccountCode  = "locked_account"
 	ErrLockedManyAttempts = "locked_many_attempts"
 
-	// Failed password decryption
-	ErrFailedPasswordDecryptionCode = "failed_decryption"
+	// Failed password decryption.
+	errDecrypt = "failed_decryption" // nolint
 
-	// Email not verified
+	// Email not verified.
 	ErrEmailNotVerified     = "Tu dirección de email no fue confirmada aún"
 	ErrEmailNotVerifiedCode = "email_not_verified"
 
-	// Invalid Email
+	// Invalid Email.
 	ErrInvalidEmail     = "El mail no se encuentra registrado"
 	ErrInvalidEmailCode = "invalid_email"
 
-	// User fetch failed
+	// User fetch failed.
 	ErrUserFetchFailed = "user_fetch_failed"
-	// Email fetch failed
+	// Email fetch failed.
 	ErrEmailFetchFailed = "email_fetch_failed"
 )
 
 type loginService struct {
-	cfg          *config.Configuration
+	cfg          *config.EnigmaConfig
 	loginOptions *config.LoginOptions
-	repository   LoginRepository
+	repository   Repository
 }
 
-func NewService(c *config.Configuration, l *config.LoginOptions, r LoginRepository) LoginService {
-	if l == nil {
-		l = defaultLoginOptions()
-	}
+func NewService(cfg *config.EnigmaConfig, r Repository) Service {
 	return &loginService{
-		cfg:          c,
-		loginOptions: l,
+		cfg:          cfg,
+		loginOptions: setLoginOptions(),
 		repository:   r,
 	}
 }
 
-func defaultLoginOptions() *config.LoginOptions {
+func setLoginOptions() *config.LoginOptions {
 	o := config.LoginOptions{}
 
 	o.LockoutOptions.LockoutTimeDuration = 5 * time.Minute
@@ -72,7 +70,7 @@ func defaultLoginOptions() *config.LoginOptions {
 	return &o
 }
 
-func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiError) {
+func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiError) { // nolint
 	if err := l.UserCanLogin(u); err != nil {
 		return "", err
 	}
@@ -82,7 +80,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		return "", err
 	}
 
-	if user == nil || user == (&domain.User{}) || userEmail == nil || userEmail == (&domain.UserEmail{}) {
+	if user == nil || userEmail == nil {
 		return "", apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
 	}
 
@@ -148,11 +146,11 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 
 func (l *loginService) UserCanLogin(u *domain.UserLoginDTO) apierror.ApiError {
 	if u.Username == "" {
-		return apierror.New(http.StatusBadRequest, config.ErrEmptyUsername, apierror.NewErrorCause(config.ErrEmptyUsername, config.ErrEmptyFieldUserCodeLogin))
+		return apierror.New(http.StatusBadRequest, domain.ErrEmptyUsername, apierror.NewErrorCause(domain.ErrEmptyUsername, domain.ErrEmptyFieldUserCodeLogin))
 	}
 
 	if u.Password == "" {
-		return apierror.New(http.StatusBadRequest, config.ErrEmptyPassword, apierror.NewErrorCause(config.ErrEmptyPassword, config.ErrEmptyFieldUserCodeLogin))
+		return apierror.New(http.StatusBadRequest, domain.ErrEmptyPassword, apierror.NewErrorCause(domain.ErrEmptyPassword, domain.ErrEmptyFieldUserCodeLogin))
 	}
 
 	return nil
@@ -163,7 +161,7 @@ func comparePasswordAndHash(password, encodedHash string) (bool, apierror.ApiErr
 	// hash.
 	p, salt, hash, err := encryption.DecodeHash(encodedHash)
 	if err != nil {
-		return false, apierror.New(http.StatusInternalServerError, ErrFailedTryingToLogin, apierror.NewErrorCause(err.Error(), ErrFailedPasswordDecryptionCode))
+		return false, apierror.New(http.StatusInternalServerError, ErrFailedTryingToLogin, apierror.NewErrorCause(err.Error(), errDecrypt))
 	}
 
 	// Derive the key from the other password using the same parameters.

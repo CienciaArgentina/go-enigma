@@ -4,90 +4,86 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/CienciaArgentina/go-enigma/internal/encryption"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-enigma/config"
+	"github.com/CienciaArgentina/go-enigma/internal/encryption"
+	"github.com/jmoiron/sqlx"
 )
 
-var (
-	errCannotDelete = errors.New("El usuario que se intenta borrar no existe o no se puede alcanzar")
-)
+var errCannotDelete = errors.New("El usuario que se intenta borrar no existe o no se puede alcanzar")
 
 const (
-	// User - Sign up
+	// User - Sign up.
 
-	// General
-	ErrCantCreateUser = "No es posible crear esta cuenta ya que hay errores en los campos"
+	// General.
+	errCantCreateUser = "No es posible crear esta cuenta ya que hay errores en los campos"
 
-	// Email regex
-	ErrInvalidEmailFormat     = "El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)"
-	ErrInvalidEmailFormatCode = "invalid_email"
+	// Email regex.
+	errInvalidEmailFormat = "El email no respeta el formato de email (ejemplo: ejemplo@dominio.com)"
 
-	// Email already exists
-	ErrEmailAlreadyExists                = "La dirección de correo electrónica ya se encuentra registrada"
-	ErrEmailAlreadyExistsCode            = "duplicate_email"
-	ErrEmailAlreadyExistsInternalErr     = "Ocurrió un error al intentar validar si el email existe"
-	ErrEmailAlreadyExistsInternalErrCode = "internal_error"
+	// Email already exists.
+	errEmailAlreadyExists            = "La dirección de correo electrónica ya se encuentra registrada"
+	errEmailAlreadyExistsInternalErr = "Ocurrió un error al intentar validar si el email existe"
 
-	// Username already exists
-	ErrUserAlreadyExists                = "Este nombre de usuario ya se encuentra registrado"
-	ErrUserAlreadyExistsCode            = "duplicate_user"
-	ErrUserAlreadyExistsInternalErr     = "Ocurrió un error al intentar validar si el usuario existe"
-	ErrUserAlreadyExistsInternalErrCode = "internal_error"
+	// Username already exists.
+	errUserAlreadyExists            = "Este nombre de usuario ya se encuentra registrado"
+	errUserAlreadyExistsInternalErr = "Ocurrió un error al intentar validar si el usuario existe"
 
-	// Username characters
-	ErrInvalidUsernameCode        = "invalid_username"
-	ErrUsernameCotainsIlegalChars = "El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)"
+	// Username characters.
+	errInvalidUsernameCode        = "invalid_username"
+	errUsernameCotainsIlegalChars = "El nombre de usuario posee caracteres no permitidos (Sólo letras, números y los caracteres `.` `-` `_`)"
 
-	// Password
-	ErrInvalidPasswordCode = "invalid_password"
-	ErrPwContainsSpace     = "La contraseña no puede poseer espacios"
+	// Password.
+	errInvalidPasswordCode = "invalid_password"
+	errPwContainsSpace     = "La contraseña no puede poseer espacios"
 
-	// Password characters
-	ErrPwDoesNotContainsUppercase     = "La contraseña debe contener al menos un caracter en mayúscula"
-	ErrPwDoesNotContainsLowercase     = "La contraseña debe contener al menos un caracter en minúscula"
-	ErrPwDoesNotContainsNonAlphaChars = "La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)"
-	ErrPwDoesNotContainsADigit        = "La contraseña debe poseer al menos 1 dígito"
+	// Password characters.
+	errPwDoesNotContainsUppercase     = "La contraseña debe contener al menos un caracter en mayúscula"
+	errPwDoesNotContainsLowercase     = "La contraseña debe contener al menos un caracter en minúscula"
+	errPwDoesNotContainsNonAlphaChars = "La contraseña debe poseer al menos 1 caracter (permitidos: ~!@#$%^&*()-+=?/<>|{}_:;.,)"
+	errPwDoesNotContainsADigit        = "La contraseña debe poseer al menos 1 dígito"
 
-	// Password hash error
-	ErrPasswordHash     = "Se generó un problema al encriptar la contraseña"
-	ErrPasswordHashCode = "password_hash_failed"
+	// Password hash error.
+	errPasswordHash     = "Se generó un problema al encriptar la contraseña"
+	errPasswordHashCode = "password_hash_failed"
 
-	// Add register
-	ErrInvalidRegisterCode = "invalid_register"
-	ErrAddingUser          = "Ocurrió un error al intentar agregar el usuario"
+	// Add register.
+	errInvalidRegisterCode = "invalid_register"
+	errAddingUser          = "Ocurrió un error al intentar agregar el usuario"
 
-	// Add register email in register
-	ErrAddingUserEmail = "Ocurrió un error al intentar agregar el email del usuario"
+	// Add register email in register.
+	errAddingUserEmail = "Ocurrió un error al intentar agregar el email del usuario"
+
+	errGenerateVerificationToken = "Ocurrió un error al generar el token de verificación"
+	errGenerateSecurityToken     = "Ocurrió un error al generar el security token"
+
+	errTokenGeneration = "failed_token_generation"
 )
 
 type registerService struct {
-	cfg             *config.Configuration
+	cfg             *config.EnigmaConfig
 	db              *sqlx.DB
 	registerOptions *config.RegisterOptions
 	repository      RegisterRepository
 }
 
-func NewService(c *config.Configuration, db *sqlx.DB, ro *config.RegisterOptions, r RegisterRepository) RegisterService {
-	if ro == nil {
-		ro = defaultRegisterOptions()
-	}
+func NewService(c *config.EnigmaConfig, db *sqlx.DB, r RegisterRepository) RegisterService {
 	return &registerService{
 		cfg:             c,
 		db:              db,
-		registerOptions: ro,
+		registerOptions: initRegisterOptions(),
 		repository:      r,
 	}
 }
 
-// These are the default default options
-func defaultRegisterOptions() *config.RegisterOptions {
+func initRegisterOptions() *config.RegisterOptions {
 	o := &config.RegisterOptions{}
 
 	o.UserOptions.RequireUniqueEmail = true
@@ -105,29 +101,37 @@ func defaultRegisterOptions() *config.RegisterOptions {
 }
 
 func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror.ApiError) {
+	var err error
 	if cansignup, err := u.UserCanSignUp(usr); !cansignup {
 		return 0, err
 	}
 
 	tx := u.db.MustBegin()
 
+	verificationToken, err := encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg)
+	if err != nil {
+		return 0, apierror.NewInternalServerApiError(errGenerateVerificationToken, err, errTokenGeneration)
+	}
+
 	user := &domain.User{
 		Username:           usr.Username,
 		NormalizedUsername: strings.ToUpper(usr.Username),
-		VerificationToken:  encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg),
+		VerificationToken:  verificationToken,
 	}
 
-	user.SecurityToken.String = encryption.GenerateSecurityToken(usr.Password, u.cfg)
+	user.SecurityToken.String, err = encryption.GenerateSecurityToken(usr.Password, u.cfg)
+	if err != nil {
+		return 0, apierror.NewInternalServerApiError(errGenerateSecurityToken, err, errTokenGeneration)
+	}
 
-	var err error
 	user.PasswordHash, err = encryption.GenerateEncodedHash(usr.Password, u.cfg)
 	if err != nil {
-		return 0, apierror.New(http.StatusInternalServerError, ErrPasswordHash, apierror.NewErrorCause(ErrPasswordHash, ErrPasswordHashCode))
+		return 0, apierror.NewInternalServerApiError(errPasswordHash, err, errPasswordHashCode)
 	}
 
 	userId, err := u.repository.AddUser(tx, user)
 	if err != nil {
-		return 0, apierror.New(http.StatusInternalServerError, ErrAddingUser, apierror.NewErrorCause(err.Error(), ErrInvalidRegisterCode))
+		return 0, apierror.NewInternalServerApiError(errAddingUser, err, errInvalidRegisterCode)
 	}
 
 	email := &domain.UserEmail{
@@ -140,7 +144,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 	_, err = u.repository.AddUserEmail(tx, email)
 	if err != nil {
 		tx.Rollback()
-		return 0, apierror.New(http.StatusInternalServerError, ErrAddingUserEmail, apierror.NewErrorCause(err.Error(), ErrInvalidRegisterCode))
+		return 0, apierror.NewInternalServerApiError(errAddingUserEmail, err, errInvalidRegisterCode)
 	}
 
 	// TODO: Send verification email
@@ -150,67 +154,67 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 }
 
 func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierror.ApiError) {
-	errs := apierror.NewWithStatus(http.StatusBadRequest).WithMessage(ErrCantCreateUser)
+	errs := apierror.NewWithStatus(http.StatusBadRequest).WithMessage(errCantCreateUser)
 
 	// Check that every field is correct
 	if usr.Username == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyUsername, apierror.NewErrorCause(config.ErrEmptyUsername, config.ErrEmptyFieldUserCodeSignup))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyUsername)
 	}
 
 	if usr.Password == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyPassword, apierror.NewErrorCause(config.ErrEmptyPassword, config.ErrEmptyFieldUserCodeSignup))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyPassword)
 	}
 
 	if usr.Email == "" {
-		return false, apierror.New(http.StatusBadRequest, config.ErrEmptyEmail, apierror.NewErrorCause(config.ErrEmptyEmail, config.ErrEmptyFieldUserCodeSignup))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
 
 	validEmail, err := regexp.Match("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,"+
 		"61}[a-zA-Z0-9])?)*$", []byte(usr.Email))
 	if !validEmail || err != nil {
-		return false, apierror.New(http.StatusBadRequest, ErrInvalidEmailFormat, apierror.NewErrorCause(ErrInvalidEmailFormat, ErrInvalidEmailFormatCode))
+		return false, apierror.NewBadRequestApiError(errInvalidEmailFormat)
 	}
 
 	if u.registerOptions.UserOptions.RequireUniqueEmail {
 		exists, err := u.repository.CheckEmailExists(usr.Email)
 		if exists {
-			return false, apierror.New(http.StatusBadRequest, ErrEmailAlreadyExists, apierror.NewErrorCause(ErrEmailAlreadyExists, ErrEmailAlreadyExistsCode))
+			return false, apierror.NewBadRequestApiError(errEmailAlreadyExists)
 		} else if err != nil && err != sql.ErrNoRows {
-			return false, apierror.New(http.StatusInternalServerError, ErrEmailAlreadyExistsInternalErr, apierror.NewErrorCause(err.Error(), ErrEmailAlreadyExistsInternalErrCode))
+			return false, apierror.NewInternalServerApiError(errEmailAlreadyExistsInternalErr, err, domain.ErrInternalCode)
 		}
 	}
 
 	usrexists, err := u.repository.CheckUsernameExists(usr.Username)
 	if usrexists {
-		return false, apierror.New(http.StatusBadRequest, ErrUserAlreadyExists, apierror.NewErrorCause(ErrUserAlreadyExists, ErrUserAlreadyExistsCode))
+		return false, apierror.NewBadRequestApiError(errUserAlreadyExists)
 	} else if err != nil && err != sql.ErrNoRows {
-		return false, apierror.New(http.StatusInternalServerError, ErrUserAlreadyExistsInternalErr, apierror.NewErrorCause(err.Error(), ErrUserAlreadyExistsInternalErrCode))
+		return false, apierror.NewInternalServerApiError(errUserAlreadyExistsInternalErr, err, domain.ErrInternalCode)
 	}
 
 	usernameMatch, _ := regexp.Match(u.registerOptions.UserOptions.AllowedCharacters, []byte(usr.Username))
 	if usernameMatch {
-		errs.AddError(ErrUsernameCotainsIlegalChars, ErrInvalidUsernameCode)
+		errs.AddError(errUsernameCotainsIlegalChars, errInvalidUsernameCode)
 	}
 
 	if strings.Contains(usr.Password, " ") {
-		errs.AddError(ErrPwContainsSpace, ErrInvalidPasswordCode)
+		errs.AddError(errPwContainsSpace, errInvalidPasswordCode)
 	}
 
 	if len(usr.Password) < u.registerOptions.PasswordOptions.RequiredLength {
-		errs.AddError(fmt.Sprintf("El campo de contraseña tiene menos de %d caracteres", u.registerOptions.PasswordOptions.RequiredLength), ErrInvalidPasswordCode)
+		errs.AddError(fmt.Sprintf("El campo de contraseña tiene menos de %d caracteres", u.registerOptions.PasswordOptions.RequiredLength), errInvalidPasswordCode)
 	}
 
 	if u.registerOptions.PasswordOptions.RequireUppercase {
 		match, _ := regexp.Match(".*[A-Z].*", []byte(usr.Password))
 		if !match {
-			errs.AddError(ErrPwDoesNotContainsUppercase, ErrInvalidPasswordCode)
+			errs.AddError(errPwDoesNotContainsUppercase, errInvalidPasswordCode)
 		}
 	}
 
 	if u.registerOptions.PasswordOptions.RequireLowercase {
 		match, _ := regexp.Match(".*[a-z].*", []byte(usr.Password))
 		if !match {
-			errs.AddError(ErrPwDoesNotContainsLowercase, ErrInvalidPasswordCode)
+			errs.AddError(errPwDoesNotContainsLowercase, errInvalidPasswordCode)
 		}
 	}
 
@@ -218,18 +222,18 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 	if u.registerOptions.PasswordOptions.RequireNonAlphanumeric {
 		match, _ := regexp.Match(".*[~!@#$%^&*()-+=?/<>|{}_:;.,].*", []byte(usr.Password))
 		if !match {
-			errs.AddError(ErrPwDoesNotContainsNonAlphaChars, ErrInvalidPasswordCode)
+			errs.AddError(errPwDoesNotContainsNonAlphaChars, errInvalidPasswordCode)
 		}
 	}
 
 	if u.registerOptions.PasswordOptions.RequireDigit {
 		match, _ := regexp.Match(".*\\d.*", []byte(usr.Password))
 		if !match {
-			errs.AddError(ErrPwDoesNotContainsADigit, ErrInvalidPasswordCode)
+			errs.AddError(errPwDoesNotContainsADigit, errInvalidPasswordCode)
 		}
 	}
 
-	if len(errs.ErrError) > 0 {
+	if len(errs.Errors()) > 0 {
 		return false, errs
 	}
 

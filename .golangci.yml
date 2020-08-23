@@ -1,0 +1,46 @@
+# output configuration options
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+  # make issues output unique by line, default is true
+  uniq-by-line: true
+  # add a prefix to the output file references; default is no prefix
+  path-prefix: ""
+
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - errcheck
+    - unused
+    - gosimple
+    - structcheck
+    - varcheck
+    - ineffassign
+    - deadcode
+    - bodyclose
+    - noctx
+    - golint
+    - stylecheck
+    - gosec
+    - unconvert
+    - dupl
+    - goconst
+    # gofmt
+    - gofumpt
+    # goimports
+    - maligned
+    - depguard
+    - unparam
+    - nakedret
+    - prealloc
+    - gocritic
+    - gochecknoinits
+    - funlen
+    - whitespace
+    - godot
+    - sqlclosecheck

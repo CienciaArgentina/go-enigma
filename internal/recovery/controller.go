@@ -1,17 +1,17 @@
 package recovery
 
 import (
-	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/CienciaArgentina/go-enigma/config"
-	domain "github.com/CienciaArgentina/go-enigma/internal"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-enigma/internal/domain"
+	"github.com/gin-gonic/gin"
 )
 
 const (
-	ErrMissingUserId = "No puede faltar el campo de ID"
+	ErrMissingUserId     = "No puede faltar el campo de ID"
 	ErrMissingUserIdCode = "missing_user_id"
 )
 
@@ -20,7 +20,7 @@ type recoveryController struct {
 }
 
 func NewController(s RecoveryService) RecoveryController {
-	return &recoveryController{svc:s}
+	return &recoveryController{svc: s}
 }
 
 func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
@@ -50,7 +50,7 @@ func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 	email := c.Query("email")
 	token := c.Query("token")
 	if email == "" || token == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 		return
 	}
 
@@ -66,7 +66,7 @@ func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 		return
 	}
 
@@ -82,7 +82,7 @@ func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
 func (r *recoveryController) ForgotUsername(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 		return
 	}
 
@@ -98,7 +98,7 @@ func (r *recoveryController) ForgotUsername(c *gin.Context) {
 func (r *recoveryController) SendPasswordReset(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 		return
 	}
 
@@ -116,10 +116,10 @@ func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		if strings.Contains(err.Error(), "EOF") {
-			c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+			c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 			return
 		}
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, err.Error(), apierror.NewErrorCause(err.Error(), config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, err.Error(), apierror.NewErrorCause(err.Error(), domain.ErrEmptyFieldCode)))
 		return
 	}
 
@@ -137,13 +137,13 @@ func (r *recoveryController) GetUserByUserId(c *gin.Context) {
 
 	userid, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, config.ErrEmptyField, apierror.NewErrorCause(config.ErrEmptyField, config.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
 	}
 
 	usr, e := r.svc.GetUserByUserId(int64(userid))
 	if e != nil {
-		 c.JSON(e.Status(), e)
-		 return
+		c.JSON(e.Status(), e)
+		return
 	}
 
 	c.JSON(http.StatusOK, usr)

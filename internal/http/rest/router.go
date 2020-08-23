@@ -1,36 +1,49 @@
 package rest
 
 import (
+	config2 "github.com/CienciaArgentina/go-backend-commons/config"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/injector"
 	"github.com/CienciaArgentina/go-enigma/config"
-	"github.com/CienciaArgentina/go-enigma/internal/infrastructure"
 	"github.com/CienciaArgentina/go-enigma/internal/login"
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
 	"github.com/CienciaArgentina/go-enigma/internal/register"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
 
-func InitRouter(cfg *config.Configuration) *gin.Engine {
+func InitRouter() *gin.Engine {
 	router := gin.Default()
-	MapRoutes(router, cfg)
+	MapRoutes(router)
 	return router
 }
 
-func MapRoutes(r *gin.Engine, cfg *config.Configuration) {
-	db := infrastructure.New(cfg)
+func MapRoutes(r *gin.Engine) {
+	injector.Initilize()
+
+	dbname := os.Getenv(config2.EnvDBName)
+	db := injector.GetDB(dbname).Database
+
+	enigmaConfig, err := config.NewEnigmaConfig()
+	if err != nil {
+		msg := "error building enigma config"
+		clog.Panic(msg, "map-routes", err, nil)
+		return
+	}
 
 	registerRepo := register.NewRepository(db)
-	registerSvc := register.NewService(cfg, db, nil, registerRepo)
+	registerSvc := register.NewService(enigmaConfig, db, registerRepo)
 	registerCtrl := register.NewController(registerSvc)
 
 	loginRepo := login.NewRepository(db)
-	loginSvc := login.NewService(cfg, nil, loginRepo)
+	loginSvc := login.NewService(enigmaConfig, loginRepo)
 	loginCtrl := login.NewController(loginSvc)
 
 	recoveryRepo := recovery.NewRepository(db)
-	recoverySvc := recovery.NewService(cfg, recoveryRepo)
+	recoverySvc := recovery.NewService(enigmaConfig, recoveryRepo)
 	recoveryCtrl := recovery.NewController(recoverySvc)
 
 	user := r.Group("/users")

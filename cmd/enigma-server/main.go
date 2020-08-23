@@ -1,18 +1,14 @@
 package main
 
 import (
-	"github.com/CienciaArgentina/go-enigma/config"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 	"github.com/CienciaArgentina/go-enigma/internal/http/rest"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	clog.SetLogLevel(clog.InfoLevel)
 
-	logrus.SetLevel(logrus.InfoLevel)
-
-	cfg := config.New()
-
-	if err := rest.InitRouter(cfg).Run(cfg.Server.Port); err != nil {
-		panic(err)
+	if err := rest.InitRouter().Run(":8080"); err != nil {
+		clog.Panic("Error starting app", "main", err, nil)
 	}
 }
