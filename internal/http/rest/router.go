@@ -49,12 +49,15 @@ func MapRoutes(r *gin.Engine) {
 
 	r.GET("/ping", Ping)
 
-	r.POST("/", registerCtrl.SignUp)
-	r.POST("/login", loginCtrl.Login)
-	r.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
-	r.GET("/:id", func(c *gin.Context) {
-		GetHandler(c, recoveryCtrl)
-	})
+	user := r.Group("/users")
+	{
+		user.POST("/", registerCtrl.SignUp)
+		user.POST("/login", loginCtrl.Login)
+		user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
+		user.GET("/:id", func(c *gin.Context) {
+			GetHandler(c, recoveryCtrl)
+		})
+	}
 }
 
 // I have to do this just because gin router can't handle REST standards.
@@ -79,9 +82,6 @@ func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	} else if strings.Contains(c.Request.RequestURI, "sendpasswordreset") {
 		// /users/sendpasswordreset
 		rc.SendPasswordReset(c)
-	} else if strings.Contains(c.Request.RequestURI, "ping") {
-		// /users/ping
-		Ping(c)
 	}
 }
 
