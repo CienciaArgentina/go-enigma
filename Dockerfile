@@ -23,5 +23,5 @@ RUN \
 FROM scratch
 
 WORKDIR /app
-COPY --from=builder /app/cmd/enigma-server/ .
+COPY --from=builder /app/cmd/enigma-server/main .
 ENTRYPOINT ["/app/cmd/enigma-server/main"]
