@@ -17,3 +17,8 @@ type Claim struct {
 	ID          int    `json:"id"`
 	Description string `json:"description"`
 }
+
+type AssignRoleRequest struct {
+	AuthID int64 `json:"auth_id"`
+	RoleID int   `json:"role_id"`
+}

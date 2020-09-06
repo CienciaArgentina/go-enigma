@@ -26,7 +26,7 @@ func (l *loginController) Login(c *gin.Context) {
 
 	jwt, errs := l.svc.LoginUser(&usr)
 	if errs != nil {
-		c.JSON(http.StatusBadRequest, errs)
+		c.JSON(errs.Status(), errs)
 		return
 	}
 

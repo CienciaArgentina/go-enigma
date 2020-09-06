@@ -2,12 +2,15 @@ package register
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
 
@@ -147,6 +150,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 		return 0, apierror.NewInternalServerApiError(errAddingUserEmail, err, errInvalidRegisterCode)
 	}
 
+	setInitialRole(userId)
 	// TODO: Send verification email
 
 	tx.Commit()
@@ -238,4 +242,20 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 	}
 
 	return true, nil
+}
+
+func setInitialRole(authid int64) (*domain.AssignedRole, error) {
+	var role *domain.AssignedRole
+	baseURL := domain.GetBaseUrl()
+	assign := domain.AssignRoleRequest{AuthID: authid, RoleID: 1}
+	res, _ := resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")
+	if res.IsError() {
+		return nil, errors.New(res.String())
+	}
+	err := json.Unmarshal(res.Body(), &role)
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 }
