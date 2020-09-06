@@ -18,7 +18,7 @@ const (
 	envArgonSaltLength  = "ARGON_SALT_LENGTH"
 	envArgonKeyLength   = "ARGON_KEY_LENGTH"
 
-	defaultArgonMemory      = 65536
+	defaultArgonMemory      = 2048
 	defaultArgonIterations  = 2
 	defaultArgonParallelism = 1
 	defaultArgonSaltLength  = 32
