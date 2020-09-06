@@ -1,11 +1,13 @@
 package recovery
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"github.com/CienciaArgentina/go-email-sender/commons"
 	"github.com/CienciaArgentina/go-email-sender/defines"
 	"github.com/CienciaArgentina/go-enigma/config"
@@ -65,14 +67,18 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, apierror.Ap
 		return false, apierror.New(http.StatusBadRequest, ErrEmailAlreadyVerified, apierror.NewErrorCause(ErrEmailAlreadyVerified, ErrEmailAlreadyVerifiedCode))
 	}
 
-	url := fmt.Sprintf("%s%s%s?email=%s&token=%s", r.cfg.Microservices.BaseUrl, r.cfg.Microservices.UsersEndpoints.BaseResource, r.cfg.UsersEndpoints.ConfirmEmail,
-		userEmail.Email, verificationToken)
+	url := fmt.Sprintf("/confirmemail?email=%s&token=%s", userEmail.Email, verificationToken)
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
-	if e != nil || !sent {
-		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
+	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+
+	if apierr != nil {
+		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
+	}
+
+	if response.IsError() {
+		return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
 	}
 
 	return true, nil
@@ -121,12 +127,17 @@ func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 
 	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
 
-	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
-	if e != nil || !sent {
-		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
+	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+
+	if apierr != nil {
+		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
 	}
 
-	return sent, nil
+	if response.IsError() {
+		return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
+	}
+
+	return true, nil
 }
 
 func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiError) {
@@ -139,17 +150,21 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiErr
 		return false, err
 	}
 
-	url := fmt.Sprintf("%s%s%s?email=%s&token=%s", r.cfg.Microservices.BaseUrl, r.cfg.Microservices.UsersEndpoints.BaseResource, r.cfg.UsersEndpoints.SendPasswordReset,
-		email, securityToken)
+	url := fmt.Sprintf("/sendpasswordreset?email=%s&token=%s", email, securityToken)
 
 	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
 
-	sent, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, emailDto)
-	if e != nil || !sent {
-		return sent, apierror.New(http.StatusBadRequest, ErrEmailSendingFailed, apierror.NewErrorCause(e.Error(), ErrEmailSendingFailedCode))
+	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+
+	if apierr != nil {
+		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
 	}
 
-	return sent, nil
+	if response.IsError() {
+		return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
+	}
+
+	return true, nil
 }
 
 func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, apierror.ApiError) {
@@ -198,9 +213,14 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 			Template: "passwordresetnotification",
 		}
 
-		_, e, _ := rest.EmailSenderApiCall(&r.cfg.Microservices, &emailDto)
-		if e != nil {
-			// log this
+		response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+
+		if apierr != nil {
+			return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
+		}
+
+		if response.IsError() {
+			return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
 		}
 	}
 
