@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
+
 	"github.com/go-resty/resty/v2"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
@@ -138,10 +140,13 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 
 	role, gErr := getRole(user.AuthId)
 	if gErr != nil {
-		return "", apierror.NewInternalServerApiError("Cannot get role", gErr, "invalid_role")
+		return "", apierror.NewInternalServerApiError("Cannot get role", gErr, "get_role")
 	}
 
-	roleb, _ := json.Marshal(role.Roles)
+	roleb, mErr := json.Marshal(role.Roles)
+	if mErr != nil {
+		return "", apierror.NewInternalServerApiError("Cannot get role", mErr, "marshal_role")
+	}
 
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"auth_id":   user.AuthId,
@@ -193,10 +198,12 @@ func getRole(authid int64) (*domain.AssignedRole, error) {
 	authstr := strconv.FormatInt(authid, 10)
 	res, _ := resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
 	if res.IsError() {
+		clog.Error("Status error - GetRole", "get-role", errors.New("Status error - GetRole"), nil)
 		return nil, errors.New(res.String())
 	}
 	err := json.Unmarshal(res.Body(), &role)
 	if err != nil {
+		clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
 		return nil, err
 	}
 
