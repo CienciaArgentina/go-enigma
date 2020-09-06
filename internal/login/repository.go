@@ -35,7 +35,7 @@ func (l *loginRepository) GetUserByUsername(username string) (*domain2.User, *do
 
 	var userEmail domain2.UserEmail
 
-	err = l.db.Get(&userEmail, "SELECT * FROM users_email WHERE user_id = ?", user.UserId)
+	err = l.db.Get(&userEmail, "SELECT * FROM users_email WHERE user_id = ?", user.AuthId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil, apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))

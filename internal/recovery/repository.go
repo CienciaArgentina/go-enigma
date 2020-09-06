@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ErrNoUserId     = "UserId inexistente"
+	ErrNoUserId     = "AuthId inexistente"
 	ErrNoUserIdCode = "invalid_user_id"
 
 	ErrNoUserEmail     = "Email inexistente"
@@ -108,7 +108,7 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 		return apierror.New(http.StatusBadRequest, ErrValidationTokenFailed, apierror.NewErrorCause(ErrValidationTokenFailed, ErrValidationTokenFailedCode))
 	}
 
-	result, err := r.db.Exec("UPDATE users_email SET verified_email = 1, verification_date = now() WHERE user_id = ?", user.UserId)
+	result, err := r.db.Exec("UPDATE users_email SET verified_email = 1, verification_date = now() WHERE user_id = ?", user.AuthId)
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrUpdatingUserEmailCode))
 	}

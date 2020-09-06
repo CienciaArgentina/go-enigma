@@ -2,9 +2,14 @@ package login
 
 import (
 	"crypto/subtle"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-enigma/config"
@@ -95,7 +100,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		if user.LockoutDate.Time.Add(l.loginOptions.LockoutOptions.LockoutTimeDuration).Before(time.Now()) {
 			user.FailedLoginAttempts = 0
 			user.LockoutEnabled = false
-			err := l.repository.UnlockAccount(user.UserId)
+			err := l.repository.UnlockAccount(user.AuthId)
 			if err != nil {
 				// TODO: Log this
 			}
@@ -108,14 +113,14 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 
 	if !verifyPassword {
 		if user.FailedLoginAttempts >= l.loginOptions.LockoutOptions.MaxFailedAttempts {
-			err := l.repository.LockAccount(user.UserId, l.loginOptions.LockoutOptions.LockoutTimeDuration)
+			err := l.repository.LockAccount(user.AuthId, l.loginOptions.LockoutOptions.LockoutTimeDuration)
 			if err != nil {
 				// TODO: Log this
 			}
 			friendlyMsg := fmt.Sprintf("Debido a repetidos intentos tu cuenta fue bloqueada por %v minutos", l.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
 			return "", apierror.New(http.StatusBadRequest, friendlyMsg, apierror.NewErrorCause(friendlyMsg, ErrLockedManyAttempts))
 		}
-		err := l.repository.IncrementLoginFailAttempt(user.UserId)
+		err := l.repository.IncrementLoginFailAttempt(user.AuthId)
 		if err != nil {
 			// TODO: Log this
 		}
@@ -126,17 +131,23 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		return "", apierror.New(http.StatusBadRequest, ErrEmailNotVerified, apierror.NewErrorCause(ErrEmailNotVerified, ErrEmailNotVerifiedCode))
 	}
 
-	e := l.repository.ResetLoginFails(user.UserId)
+	e := l.repository.ResetLoginFails(user.AuthId)
 	if e != nil {
 		// TODO: Log this
 	}
 
-	// TODO: Add role
+	role, gErr := getRole(user.AuthId)
+	if gErr != nil {
+		return "", apierror.NewInternalServerApiError("Cannot get role", gErr, "invalid_role")
+	}
+
+	roleb, _ := json.Marshal(role.Roles)
 
 	jwt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId":    user.UserId,
+		"auth_id":   user.AuthId,
 		"email":     userEmail.Email,
 		"timestamp": time.Now().Unix(),
+		"role":      string(roleb),
 	})
 
 	jwtString, _ := jwt.SignedString([]byte(l.cfg.Keys.PasswordHashingKey))
@@ -174,4 +185,20 @@ func comparePasswordAndHash(password, encodedHash string) (bool, apierror.ApiErr
 		return true, nil
 	}
 	return false, nil
+}
+
+func getRole(authid int64) (*domain.AssignedRole, error) {
+	var role *domain.AssignedRole
+	baseURL := domain.GetBaseUrl()
+	authstr := strconv.FormatInt(authid, 10)
+	res, _ := resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
+	if res.IsError() {
+		return nil, errors.New(res.String())
+	}
+	err := json.Unmarshal(res.Body(), &role)
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 }
