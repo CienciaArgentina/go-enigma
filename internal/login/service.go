@@ -198,7 +198,7 @@ func getRole(authid int64) (*domain.AssignedRole, error) {
 	authstr := strconv.FormatInt(authid, 10)
 	res, _ := resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
 	if res.IsError() {
-		clog.Error("Status error - GetRole", "get-role", errors.New("Status error - GetRole"), nil)
+		clog.Error("Status error - GetRole", "get-role", errors.New("Status error - GetRole"), map[string]string{"status": res.Status()})
 		return nil, errors.New(res.String())
 	}
 
