@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -79,13 +81,13 @@ func setLoginOptions() *config.LoginOptions {
 	return &o
 }
 
-func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiError) { // nolint
+func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInformation) (string, apierror.ApiError) { // nolint
 	var err error
 	var apierr apierror.ApiError
 	var user *domain.User
 	var userEmail *domain.UserEmail
 
-	performance.TrackTime(time.Now(), "UserCanLogin", func() {
+	performance.TrackTime(time.Now(), "UserCanLogin", ctx, func() {
 		apierr = l.UserCanLogin(u)
 	})
 
@@ -93,7 +95,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		return "", apierr
 	}
 
-	performance.TrackTime(time.Now(), "GetUserByUsername", func() {
+	performance.TrackTime(time.Now(), "GetUserByUsername", ctx, func() {
 		user, userEmail, apierr = l.repository.GetUserByUsername(u.Username)
 	})
 	if apierr != nil {
@@ -106,7 +108,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 	}
 
 	var verifyPassword bool
-	performance.TrackTime(time.Now(), "comparePasswordAndHash", func() {
+	performance.TrackTime(time.Now(), "comparePasswordAndHash", ctx, func() {
 		verifyPassword, err = comparePasswordAndHash(u.Password, user.PasswordHash)
 	})
 	if err != nil {
@@ -151,7 +153,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		return "", apierror.NewBadRequestApiError(ErrEmailNotVerified)
 	}
 
-	performance.TrackTime(time.Now(), "ResetLoginFails", func() {
+	performance.TrackTime(time.Now(), "ResetLoginFails", ctx, func() {
 		err = l.repository.ResetLoginFails(user.AuthId)
 	})
 	if err != nil {
@@ -160,8 +162,8 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 
 	var role *domain.AssignedRole
 	var gErr error
-	performance.TrackTime(time.Now(), "getRole", func() {
-		role, gErr = getRole(user.AuthId)
+	performance.TrackTime(time.Now(), "getRole", ctx, func() {
+		role, gErr = getRole(user.AuthId, ctx)
 	})
 	if gErr != nil {
 		return "", apierror.NewInternalServerApiError("Cannot get role", gErr, "get_role")
@@ -221,14 +223,14 @@ func comparePasswordAndHash(password, encodedHash string) (bool, error) {
 	return false, nil
 }
 
-func getRole(authid int64) (*domain.AssignedRole, error) {
+func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, error) {
 	var role *domain.AssignedRole
 	var res *resty.Response
 	var err error
 	baseURL := domain.GetBaseUrl()
 	authstr := strconv.FormatInt(authid, 10)
 
-	performance.TrackTime(time.Now(), "GetRoleAPICall", func() {
+	performance.TrackTime(time.Now(), "GetRoleAPICall", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
 	})
 

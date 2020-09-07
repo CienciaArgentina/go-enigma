@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
@@ -20,6 +22,7 @@ func NewController(s Service) Controller {
 
 func (l *loginController) Login(c *gin.Context) {
 	var usr domain.UserLoginDTO
+	ctx := rest.GetContextInformation("login", c)
 
 	if err := c.ShouldBindJSON(&usr); err != nil {
 		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrInvalidBody, apierror.NewErrorCause(domain.ErrInvalidBody, domain.ErrInvalidBodyCode)))
@@ -28,8 +31,8 @@ func (l *loginController) Login(c *gin.Context) {
 
 	var jwt string
 	var apierr apierror.ApiError
-	performance.TrackTime(time.Now(), "CompleteLogin", func() {
-		jwt, apierr = l.svc.LoginUser(&usr)
+	performance.TrackTime(time.Now(), "CompleteLogin", ctx, func() {
+		jwt, apierr = l.svc.LoginUser(&usr, ctx)
 	})
 	if apierr != nil {
 		c.JSON(apierr.Status(), apierr)

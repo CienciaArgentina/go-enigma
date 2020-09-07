@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 
 func InitRouter() *gin.Engine {
 	router := gin.Default()
+	router.Use(rest.SetContextInformation)
 	MapRoutes(router)
 	return router
 }

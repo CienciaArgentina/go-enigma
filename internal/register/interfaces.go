@@ -2,6 +2,7 @@ package register
 
 import (
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	domain2 "github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -18,7 +19,7 @@ type RegisterRepository interface {
 
 type RegisterService interface {
 	UserCanSignUp(u *domain2.UserSignupDTO) (bool, apierror.ApiError)
-	CreateUser(u *domain2.UserSignupDTO) (int64, apierror.ApiError)
+	CreateUser(u *domain2.UserSignupDTO, ctx *rest.ContextInformation) (int64, apierror.ApiError)
 }
 
 type RegisterController interface {

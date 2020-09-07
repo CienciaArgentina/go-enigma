@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
@@ -106,12 +108,12 @@ func initRegisterOptions() *config.RegisterOptions {
 	return o
 }
 
-func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror.ApiError) {
+func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.ContextInformation) (int64, apierror.ApiError) {
 	var err error
 	var apierr apierror.ApiError
 	var cansignup bool
 
-	performance.TrackTime(time.Now(), "UserCanSignUp", func() {
+	performance.TrackTime(time.Now(), "UserCanSignUp", ctx, func() {
 		cansignup, apierr = u.UserCanSignUp(usr)
 	})
 
@@ -122,7 +124,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 	tx := u.db.MustBegin()
 
 	var verificationToken string
-	performance.TrackTime(time.Now(), "GenerateVerificationToken", func() {
+	performance.TrackTime(time.Now(), "GenerateVerificationToken", ctx, func() {
 		verificationToken, err = encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg)
 	})
 	if err != nil {
@@ -135,14 +137,14 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 		VerificationToken:  verificationToken,
 	}
 
-	performance.TrackTime(time.Now(), "GenerateSecurityToken", func() {
+	performance.TrackTime(time.Now(), "GenerateSecurityToken", ctx, func() {
 		user.SecurityToken.String, err = encryption.GenerateSecurityToken(usr.Password, u.cfg)
 	})
 	if err != nil {
 		return 0, apierror.NewInternalServerApiError(errGenerateSecurityToken, err, errTokenGeneration)
 	}
 
-	performance.TrackTime(time.Now(), "GenerateEncodedHash", func() {
+	performance.TrackTime(time.Now(), "GenerateEncodedHash", ctx, func() {
 		user.PasswordHash, err = encryption.GenerateEncodedHash(usr.Password, u.cfg)
 	})
 	if err != nil {
@@ -150,7 +152,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 	}
 
 	var userID int64
-	performance.TrackTime(time.Now(), "AddUser", func() {
+	performance.TrackTime(time.Now(), "AddUser", ctx, func() {
 		userID, err = u.repository.AddUser(tx, user)
 	})
 	if err != nil {
@@ -164,7 +166,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 		VerfiedEmail:    false,
 	}
 
-	performance.TrackTime(time.Now(), "AddUserEmail", func() {
+	performance.TrackTime(time.Now(), "AddUserEmail", ctx, func() {
 		_, err = u.repository.AddUserEmail(tx, email)
 	})
 	if err != nil {
@@ -172,7 +174,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 		return 0, apierror.NewInternalServerApiError(errAddingUserEmail, err, errInvalidRegisterCode)
 	}
 
-	apierr = setInitialRole(userID)
+	apierr = setInitialRole(userID, ctx)
 	if apierr != nil {
 		tx.Rollback()
 		return 0, apierr
@@ -270,12 +272,12 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 	return true, nil
 }
 
-func setInitialRole(authid int64) apierror.ApiError {
+func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiError {
 	var err error
 	var res *resty.Response
 	baseURL := domain.GetBaseUrl()
 	assign := domain.AssignRoleRequest{AuthID: authid, RoleID: 1}
-	performance.TrackTime(time.Now(), "SetInitialRoleAPICall", func() {
+	performance.TrackTime(time.Now(), "SetInitialRoleAPICall", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")
 	})
 	if err != nil {
