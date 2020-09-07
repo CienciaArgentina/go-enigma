@@ -3,7 +3,7 @@ module github.com/CienciaArgentina/go-enigma
 go 1.14
 
 require (
-	github.com/CienciaArgentina/go-backend-commons v0.0.17
+	github.com/CienciaArgentina/go-backend-commons v0.0.18
 	github.com/CienciaArgentina/go-email-sender v0.0.0-20200412073256-f7f1a1a6e55c
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3

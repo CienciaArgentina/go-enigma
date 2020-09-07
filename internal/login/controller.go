@@ -2,8 +2,10 @@ package login
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/gin-gonic/gin"
 )
@@ -24,9 +26,13 @@ func (l *loginController) Login(c *gin.Context) {
 		return
 	}
 
-	jwt, errs := l.svc.LoginUser(&usr)
-	if errs != nil {
-		c.JSON(errs.Status(), errs)
+	var jwt string
+	var apierr apierror.ApiError
+	performance.TrackTime(time.Now(), "CompleteLogin", func() {
+		jwt, apierr = l.svc.LoginUser(&usr)
+	})
+	if apierr != nil {
+		c.JSON(apierr.Status(), apierr)
 		return
 	}
 

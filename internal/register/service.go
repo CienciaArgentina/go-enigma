@@ -2,13 +2,16 @@ package register
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 
 	"github.com/go-resty/resty/v2"
 
@@ -105,13 +108,23 @@ func initRegisterOptions() *config.RegisterOptions {
 
 func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror.ApiError) {
 	var err error
-	if cansignup, err := u.UserCanSignUp(usr); !cansignup {
-		return 0, err
+	var apierr apierror.ApiError
+	var cansignup bool
+
+	performance.TrackTime(time.Now(), "UserCanSignUp", func() {
+		cansignup, apierr = u.UserCanSignUp(usr)
+	})
+
+	if !cansignup {
+		return 0, apierr
 	}
 
 	tx := u.db.MustBegin()
 
-	verificationToken, err := encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg)
+	var verificationToken string
+	performance.TrackTime(time.Now(), "GenerateVerificationToken", func() {
+		verificationToken, err = encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg)
+	})
 	if err != nil {
 		return 0, apierror.NewInternalServerApiError(errGenerateVerificationToken, err, errTokenGeneration)
 	}
@@ -122,39 +135,52 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO) (int64, apierror
 		VerificationToken:  verificationToken,
 	}
 
-	user.SecurityToken.String, err = encryption.GenerateSecurityToken(usr.Password, u.cfg)
+	performance.TrackTime(time.Now(), "GenerateSecurityToken", func() {
+		user.SecurityToken.String, err = encryption.GenerateSecurityToken(usr.Password, u.cfg)
+	})
 	if err != nil {
 		return 0, apierror.NewInternalServerApiError(errGenerateSecurityToken, err, errTokenGeneration)
 	}
 
-	user.PasswordHash, err = encryption.GenerateEncodedHash(usr.Password, u.cfg)
+	performance.TrackTime(time.Now(), "GenerateEncodedHash", func() {
+		user.PasswordHash, err = encryption.GenerateEncodedHash(usr.Password, u.cfg)
+	})
 	if err != nil {
 		return 0, apierror.NewInternalServerApiError(errPasswordHash, err, errPasswordHashCode)
 	}
 
-	userId, err := u.repository.AddUser(tx, user)
+	var userID int64
+	performance.TrackTime(time.Now(), "AddUser", func() {
+		userID, err = u.repository.AddUser(tx, user)
+	})
 	if err != nil {
 		return 0, apierror.NewInternalServerApiError(errAddingUser, err, errInvalidRegisterCode)
 	}
 
 	email := &domain.UserEmail{
-		UserId:          userId,
+		UserId:          userID,
 		Email:           usr.Email,
 		NormalizedEmail: strings.ToUpper(usr.Email),
 		VerfiedEmail:    false,
 	}
 
-	_, err = u.repository.AddUserEmail(tx, email)
+	performance.TrackTime(time.Now(), "AddUserEmail", func() {
+		_, err = u.repository.AddUserEmail(tx, email)
+	})
 	if err != nil {
 		tx.Rollback()
 		return 0, apierror.NewInternalServerApiError(errAddingUserEmail, err, errInvalidRegisterCode)
 	}
 
-	setInitialRole(userId)
+	apierr = setInitialRole(userID)
+	if apierr != nil {
+		tx.Rollback()
+		return 0, apierr
+	}
 	// TODO: Send verification email
 
 	tx.Commit()
-	return userId, nil
+	return userID, nil
 }
 
 func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierror.ApiError) {
@@ -244,18 +270,20 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 	return true, nil
 }
 
-func setInitialRole(authid int64) (*domain.AssignedRole, error) {
-	var role *domain.AssignedRole
+func setInitialRole(authid int64) apierror.ApiError {
+	var err error
+	var res *resty.Response
 	baseURL := domain.GetBaseUrl()
 	assign := domain.AssignRoleRequest{AuthID: authid, RoleID: 1}
-	res, _ := resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")
-	if res.IsError() {
-		return nil, errors.New(res.String())
-	}
-	err := json.Unmarshal(res.Body(), &role)
+	performance.TrackTime(time.Now(), "SetInitialRoleAPICall", func() {
+		res, err = resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")
+	})
 	if err != nil {
-		return nil, err
+		clog.Error("Rest client error", "set-initial-role", err, nil)
+		return apierror.NewInternalServerApiError(err.Error(), err, "set_initial_role_fail")
 	}
-
-	return role, nil
+	if res.IsError() {
+		return apierror.New(res.StatusCode(), res.String(), nil)
+	}
+	return nil
 }

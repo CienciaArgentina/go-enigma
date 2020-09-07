@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
+	"os"
 	"strconv"
 	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 
@@ -78,23 +80,39 @@ func setLoginOptions() *config.LoginOptions {
 }
 
 func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiError) { // nolint
-	if err := l.UserCanLogin(u); err != nil {
-		return "", err
+	var err error
+	var apierr apierror.ApiError
+	var user *domain.User
+	var userEmail *domain.UserEmail
+
+	performance.TrackTime(time.Now(), "UserCanLogin", func() {
+		apierr = l.UserCanLogin(u)
+	})
+
+	if apierr != nil {
+		return "", apierr
 	}
 
-	user, userEmail, err := l.repository.GetUserByUsername(u.Username)
-	if err != nil {
-		return "", err
+	performance.TrackTime(time.Now(), "GetUserByUsername", func() {
+		user, userEmail, apierr = l.repository.GetUserByUsername(u.Username)
+	})
+	if apierr != nil {
+		clog.Error("Error al obtener el username", "login-user", err, nil)
+		return "", apierr
 	}
 
 	if user == nil || userEmail == nil {
-		return "", apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
+		return "", apierror.NewBadRequestApiError(ErrInvalidLogin)
 	}
 
-	verifyPassword, err := comparePasswordAndHash(u.Password, user.PasswordHash)
+	var verifyPassword bool
+	performance.TrackTime(time.Now(), "comparePasswordAndHash", func() {
+		verifyPassword, err = comparePasswordAndHash(u.Password, user.PasswordHash)
+	})
 	if err != nil {
 		// Return friendly message
-		return "", err
+		clog.Error("Error comparing password", "login-user", err, nil)
+		return "", apierror.NewInternalServerApiError(domain.ErrUnexpectedError, err, domain.ErrInternalCode)
 	}
 
 	if user.LockoutEnabled {
@@ -104,12 +122,12 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 			user.LockoutEnabled = false
 			err := l.repository.UnlockAccount(user.AuthId)
 			if err != nil {
-				// TODO: Log this
+				clog.Error("Can't unlock account", "login-user", err, map[string]string{"auth_id": fmt.Sprintf("%d", user.AuthId)})
 			}
 		} else {
 			friendlyMessage := fmt.Sprintf("La cuenta se encuentra bloqueada por %v minutos por intentos fallidos de login",
 				l.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
-			return "", apierror.New(http.StatusBadRequest, friendlyMessage, apierror.NewErrorCause(friendlyMessage, ErrLockedAccountCode))
+			return "", apierror.NewBadRequestApiError(friendlyMessage)
 		}
 	}
 
@@ -117,28 +135,34 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		if user.FailedLoginAttempts >= l.loginOptions.LockoutOptions.MaxFailedAttempts {
 			err := l.repository.LockAccount(user.AuthId, l.loginOptions.LockoutOptions.LockoutTimeDuration)
 			if err != nil {
-				// TODO: Log this
+				clog.Error("Can't lock account", "login-user", err, map[string]string{"auth_id": fmt.Sprintf("%d", user.AuthId)})
 			}
 			friendlyMsg := fmt.Sprintf("Debido a repetidos intentos tu cuenta fue bloqueada por %v minutos", l.loginOptions.LockoutOptions.LockoutTimeDuration.Minutes())
-			return "", apierror.New(http.StatusBadRequest, friendlyMsg, apierror.NewErrorCause(friendlyMsg, ErrLockedManyAttempts))
+			return "", apierror.NewBadRequestApiError(friendlyMsg)
 		}
 		err := l.repository.IncrementLoginFailAttempt(user.AuthId)
 		if err != nil {
-			// TODO: Log this
+			clog.Error("Can't increment login fail attemp", "login-user", err, map[string]string{"auth_id": fmt.Sprintf("%d", user.AuthId)})
 		}
-		return "", apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
+		return "", apierror.NewBadRequestApiError(ErrInvalidLogin)
 	}
 
 	if l.loginOptions.SignInOptions.RequireConfirmedEmail && !userEmail.VerfiedEmail {
-		return "", apierror.New(http.StatusBadRequest, ErrEmailNotVerified, apierror.NewErrorCause(ErrEmailNotVerified, ErrEmailNotVerifiedCode))
+		return "", apierror.NewBadRequestApiError(ErrEmailNotVerified)
 	}
 
-	e := l.repository.ResetLoginFails(user.AuthId)
-	if e != nil {
-		// TODO: Log this
+	performance.TrackTime(time.Now(), "ResetLoginFails", func() {
+		err = l.repository.ResetLoginFails(user.AuthId)
+	})
+	if err != nil {
+		clog.Error("can't reset login fails", "login-user", err, map[string]string{"auth_id": fmt.Sprintf("%d", user.AuthId)})
 	}
 
-	role, gErr := getRole(user.AuthId)
+	var role *domain.AssignedRole
+	var gErr error
+	performance.TrackTime(time.Now(), "getRole", func() {
+		role, gErr = getRole(user.AuthId)
+	})
 	if gErr != nil {
 		return "", apierror.NewInternalServerApiError("Cannot get role", gErr, "get_role")
 	}
@@ -155,29 +179,34 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO) (string, apierror.ApiEr
 		"role":      string(roleb),
 	})
 
-	jwtString, _ := jwt.SignedString([]byte(l.cfg.Keys.PasswordHashingKey))
+	jwtSign := os.Getenv("JWT_SIGN")
+	if jwtSign == "" {
+		clog.Panic("JWT SIGN is empty", "login-user", errors.New("JWT SIGN is empty"), nil)
+		return "", nil
+	}
+	jwtString, _ := jwt.SignedString([]byte(jwtSign))
 
 	return jwtString, nil
 }
 
 func (l *loginService) UserCanLogin(u *domain.UserLoginDTO) apierror.ApiError {
 	if u.Username == "" {
-		return apierror.New(http.StatusBadRequest, domain.ErrEmptyUsername, apierror.NewErrorCause(domain.ErrEmptyUsername, domain.ErrEmptyFieldUserCodeLogin))
+		return apierror.NewBadRequestApiError(domain.ErrEmptyUsername)
 	}
 
 	if u.Password == "" {
-		return apierror.New(http.StatusBadRequest, domain.ErrEmptyPassword, apierror.NewErrorCause(domain.ErrEmptyPassword, domain.ErrEmptyFieldUserCodeLogin))
+		return apierror.NewBadRequestApiError(domain.ErrEmptyPassword)
 	}
 
 	return nil
 }
 
-func comparePasswordAndHash(password, encodedHash string) (bool, apierror.ApiError) {
+func comparePasswordAndHash(password, encodedHash string) (bool, error) {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	p, salt, hash, err := encryption.DecodeHash(encodedHash)
 	if err != nil {
-		return false, apierror.New(http.StatusInternalServerError, ErrFailedTryingToLogin, apierror.NewErrorCause(err.Error(), errDecrypt))
+		return false, err
 	}
 
 	// Derive the key from the other password using the same parameters.
@@ -194,17 +223,23 @@ func comparePasswordAndHash(password, encodedHash string) (bool, apierror.ApiErr
 
 func getRole(authid int64) (*domain.AssignedRole, error) {
 	var role *domain.AssignedRole
+	var res *resty.Response
+	var err error
 	baseURL := domain.GetBaseUrl()
 	authstr := strconv.FormatInt(authid, 10)
-	res, _ := resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
+
+	performance.TrackTime(time.Now(), "GetRoleAPICall", func() {
+		res, err = resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
+	})
+
+	if err != nil {
+		clog.Error("Rest client error", "get-role", err, nil)
+	}
 	if res.IsError() {
-		clog.Error("Status error - GetRole", "get-role", errors.New("Status error - GetRole"), map[string]string{"status": res.Status()})
+		clog.Error("Status error - GetRole", "get-role", errors.New("status error - GetRole"), map[string]string{"status": res.Status()})
 		return nil, errors.New(res.String())
 	}
-
-	clog.Debug("Response body", "get-role", map[string]string{"code": res.Status(), "body": res.String()})
-
-	err := json.Unmarshal(res.Body(), &role)
+	err = json.Unmarshal(res.Body(), &role)
 	if err != nil {
 		clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
 		return nil, err

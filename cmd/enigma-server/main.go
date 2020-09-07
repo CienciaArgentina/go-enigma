@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	clog.SetLogLevel(clog.InfoLevel)
+	clog.SetLogLevel(clog.DebugLevel)
 
 	if err := rest.InitRouter().Run(); err != nil {
 		clog.Panic("Error starting app", "main", err, nil)

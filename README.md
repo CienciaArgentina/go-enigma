@@ -33,6 +33,7 @@ The variables that the system need are:
     export ARGON_PARALLELISM="value"
     export ARGON_SALT_LENGTH="value"
     export ARGON_KEY_LENGTH="value"
+    export JSON_SIGN = "value"
 ```
 
 Any other configuration should be provided in the `config.{SCOPE}.yml` file. Also, please check [working directory](#working-directory).
