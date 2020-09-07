@@ -1,7 +1,5 @@
 package domain
 
-import "github.com/CienciaArgentina/go-backend-commons/pkg/scope"
-
 const (
 	// Request.
 	ErrInvalidBody     = "El cuerpo del mensaje que intentás enviar no es válido"
@@ -23,9 +21,5 @@ const (
 )
 
 func GetBaseUrl() string {
-	if scope.IsProductiveScope() {
-		return ""
-	}
-
 	return "https://api.cienciaargentina.dev"
 }
