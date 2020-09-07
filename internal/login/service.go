@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
@@ -181,12 +180,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInform
 		"role":      string(roleb),
 	})
 
-	jwtSign := os.Getenv("JWT_SIGN")
-	if jwtSign == "" {
-		clog.Panic("JWT SIGN is empty", "login-user", errors.New("JWT SIGN is empty"), nil)
-		return "", nil
-	}
-	jwtString, _ := jwt.SignedString([]byte(jwtSign))
+	jwtString, _ := jwt.SignedString([]byte(l.cfg.JwtSign))
 
 	return jwtString, nil
 }

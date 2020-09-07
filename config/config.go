@@ -23,6 +23,8 @@ const (
 	defaultArgonParallelism = 1
 	defaultArgonSaltLength  = 32
 	defaultArgonKeyLength   = 32
+
+	envJwtSign = "JWT_SIGN"
 )
 
 type EnigmaConfig struct {
@@ -31,6 +33,7 @@ type EnigmaConfig struct {
 	RegisterOptions *RegisterOptions
 	LoginOptions    *LoginOptions
 	Microservices
+	JwtSign string
 }
 
 type Server struct {
@@ -117,6 +120,11 @@ func NewEnigmaConfig() (*EnigmaConfig, error) {
 		return nil, err
 	}
 
+	cfg.JwtSign, err = getJwtSign()
+	if err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
 }
 
@@ -191,4 +199,15 @@ func (e *EnigmaConfig) getArgonParams() (*ArgonParams, error) {
 	}
 
 	return params, nil
+}
+
+func getJwtSign() (string, error) {
+	sign := os.Getenv(envJwtSign)
+	if sign == "" {
+		err := errors.New("JWT sign is empty")
+		clog.Panic(err.Error(), "get-jwt-sign", err, nil)
+		return "", err
+	}
+
+	return sign, nil
 }
