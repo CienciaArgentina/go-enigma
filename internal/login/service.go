@@ -201,7 +201,6 @@ func getRole(authid int64) (*domain.AssignedRole, error) {
 		clog.Error("Status error - GetRole", "get-role", errors.New("Status error - GetRole"), nil)
 		return nil, errors.New(res.String())
 	}
-	clog.Error("Not error", "get-role", errors.New("not"), map[string]string{"body": res.String()})
 	err := json.Unmarshal(res.Body(), &role)
 	if err != nil {
 		clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
