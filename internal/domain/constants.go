@@ -21,5 +21,5 @@ const (
 )
 
 func GetBaseUrl() string {
-	return "https://api.cienciaargentina.dev"
+	return "http://ca-roles-svc"
 }
