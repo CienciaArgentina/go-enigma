@@ -221,7 +221,7 @@ func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, 
 	var role *domain.AssignedRole
 	var res *resty.Response
 	var err error
-	baseURL := domain.GetBaseUrl()
+	baseURL := domain.GetRolesBaseURL()
 	authstr := strconv.FormatInt(authid, 10)
 
 	performance.TrackTime(time.Now(), "GetRoleAPICall", ctx, func() {

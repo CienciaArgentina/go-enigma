@@ -71,7 +71,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, apierror.Ap
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 
 	if apierr != nil {
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
@@ -127,7 +127,7 @@ func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 
 	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
 
-	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 
 	if apierr != nil {
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
@@ -154,7 +154,7 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiErr
 
 	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
 
-	response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 
 	if apierr != nil {
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
@@ -213,7 +213,7 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 			Template: "passwordresetnotification",
 		}
 
-		response, apierr := resty.New().SetHostURL("https://api.cienciaargentina.dev").R().SetBody(emailDto).Post("/email")
+		response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 
 		if apierr != nil {
 			return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")

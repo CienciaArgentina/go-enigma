@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CienciaArgentina/go-enigma/internal/recovery"
+
 	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -80,14 +82,16 @@ type registerService struct {
 	db              *sqlx.DB
 	registerOptions *config.RegisterOptions
 	repository      RegisterRepository
+	recoverySvc     recovery.RecoveryService
 }
 
-func NewService(c *config.EnigmaConfig, db *sqlx.DB, r RegisterRepository) RegisterService {
+func NewService(c *config.EnigmaConfig, db *sqlx.DB, r RegisterRepository, recoverySvc recovery.RecoveryService) RegisterService {
 	return &registerService{
 		cfg:             c,
 		db:              db,
 		registerOptions: initRegisterOptions(),
 		repository:      r,
+		recoverySvc:     recoverySvc,
 	}
 }
 
@@ -179,9 +183,10 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		tx.Rollback()
 		return 0, apierr
 	}
-	// TODO: Send verification email
 
 	tx.Commit()
+
+	u.recoverySvc.SendConfirmationEmail(userID)
 	return userID, nil
 }
 
@@ -275,7 +280,7 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiError {
 	var err error
 	var res *resty.Response
-	baseURL := domain.GetBaseUrl()
+	baseURL := domain.GetRolesBaseURL()
 	assign := domain.AssignRoleRequest{AuthID: authid, RoleID: 1}
 	performance.TrackTime(time.Now(), "SetInitialRoleAPICall", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")

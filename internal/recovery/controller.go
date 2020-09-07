@@ -148,4 +148,3 @@ func (r *recoveryController) GetUserByUserId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, usr)
 }
-

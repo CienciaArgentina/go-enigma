@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/CienciaArgentina/go-backend-commons/pkg/scope"
+
 const (
 	// Request.
 	ErrInvalidBody     = "El cuerpo del mensaje que intentás enviar no es válido"
@@ -20,6 +22,16 @@ const (
 	ErrUnexpectedError = "Ocurrió un error en el sistema, por favor, ponete en contacto con sistemas"
 )
 
-func GetBaseUrl() string {
+func GetRolesBaseURL() string {
+	if scope.IsLocal() {
+		return "https://api.cienciaargentina.dev"
+	}
 	return "http://ca-roles-svc"
+}
+
+func GetEmailSenderBaseURL() string {
+	if scope.IsLocal() {
+		return "https://api.cienciaargentina.dev"
+	}
+	return "http://ca-email-sender-svc"
 }

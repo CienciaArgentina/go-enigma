@@ -1,11 +1,12 @@
 package rest
 
 import (
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	config2 "github.com/CienciaArgentina/go-backend-commons/config"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -37,10 +38,6 @@ func MapRoutes(r *gin.Engine) {
 		return
 	}
 
-	registerRepo := register.NewRepository(db)
-	registerSvc := register.NewService(enigmaConfig, db, registerRepo)
-	registerCtrl := register.NewController(registerSvc)
-
 	loginRepo := login.NewRepository(db)
 	loginSvc := login.NewService(enigmaConfig, loginRepo)
 	loginCtrl := login.NewController(loginSvc)
@@ -48,6 +45,10 @@ func MapRoutes(r *gin.Engine) {
 	recoveryRepo := recovery.NewRepository(db)
 	recoverySvc := recovery.NewService(enigmaConfig, recoveryRepo)
 	recoveryCtrl := recovery.NewController(recoverySvc)
+
+	registerRepo := register.NewRepository(db)
+	registerSvc := register.NewService(enigmaConfig, db, registerRepo, recoverySvc)
+	registerCtrl := register.NewController(registerSvc)
 
 	r.GET("/ping", Ping)
 
