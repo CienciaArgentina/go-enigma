@@ -186,7 +186,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 
 	tx.Commit()
 
-	u.recoverySvc.SendConfirmationEmail(userID)
+	u.recoverySvc.SendConfirmationEmail(userID, ctx)
 	return userID, nil
 }
 

@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
@@ -24,20 +28,21 @@ func NewController(s RecoveryService) RecoveryController {
 }
 
 func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
+	ctx := rest.GetContextInformation("SendConfirmationEmail", c)
 	userIdParam := c.Param("id")
 	if userIdParam == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, ErrMissingUserId, apierror.NewErrorCause(ErrMissingUserId, ErrMissingUserIdCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(ErrMissingUserId))
 		return
 	}
 
 	var err error
 	parsedUserId, err := strconv.ParseInt(userIdParam, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, ErrMissingUserId, apierror.NewErrorCause(err.Error(), ErrMissingUserIdCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(ErrMissingUserId))
 		return
 	}
 
-	_, e := r.svc.SendConfirmationEmail(parsedUserId)
+	_, e := r.svc.SendConfirmationEmail(parsedUserId, ctx)
 	if e != nil {
 		c.JSON(e.Status(), e)
 		return
@@ -47,14 +52,18 @@ func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
 }
 
 func (r *recoveryController) ConfirmEmail(c *gin.Context) {
+	ctx := rest.GetContextInformation("ConfirmEmail", c)
 	email := c.Query("email")
 	token := c.Query("token")
 	if email == "" || token == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 		return
 	}
 
-	_, err := r.svc.ConfirmEmail(email, token)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "ConfirmEmail", ctx, func() {
+		_, err = r.svc.ConfirmEmail(email, token, ctx)
+	})
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -64,13 +73,18 @@ func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 }
 
 func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
+	ctx := rest.GetContextInformation("ResendEmailConfirmation", c)
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 		return
 	}
 
-	_, err := r.svc.ResendEmailConfirmationEmail(email)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "ResendEmailConfirmationEmail", ctx, func() {
+		_, err = r.svc.ResendEmailConfirmationEmail(email, ctx)
+	})
+
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -80,13 +94,17 @@ func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
 }
 
 func (r *recoveryController) ForgotUsername(c *gin.Context) {
+	ctx := rest.GetContextInformation("ForgotUsername", c)
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 		return
 	}
 
-	_, err := r.svc.SendUsername(email)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "SendUsername", ctx, func() {
+		_, err = r.svc.SendUsername(email, ctx)
+	})
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -96,13 +114,18 @@ func (r *recoveryController) ForgotUsername(c *gin.Context) {
 }
 
 func (r *recoveryController) SendPasswordReset(c *gin.Context) {
+	ctx := rest.GetContextInformation("ForgotUsername", c)
 	email := c.Query("email")
 	if email == "" {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 		return
 	}
 
-	_, err := r.svc.SendPasswordReset(email)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "SendPasswordReset", ctx, func() {
+		_, err = r.svc.SendPasswordReset(email, ctx)
+	})
+
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -112,18 +135,22 @@ func (r *recoveryController) SendPasswordReset(c *gin.Context) {
 }
 
 func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
+	ctx := rest.GetContextInformation("ConfirmPasswordReset", c)
 	var dto domain.PasswordResetDto
 
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		if strings.Contains(err.Error(), "EOF") {
-			c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+			c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 			return
 		}
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, err.Error(), apierror.NewErrorCause(err.Error(), domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(err.Error()))
 		return
 	}
 
-	_, err := r.svc.ResetPassword(dto.Email, dto.Password, dto.ConfirmPassword, dto.Token)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "ResetPassword", ctx, func() {
+		_, err = r.svc.ResetPassword(dto.Email, dto.Password, dto.ConfirmPassword, dto.Token, ctx)
+	})
 	if err != nil {
 		c.JSON(err.Status(), err)
 		return
@@ -137,7 +164,7 @@ func (r *recoveryController) GetUserByUserId(c *gin.Context) {
 
 	userid, err := strconv.Atoi(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode)))
+		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
 	}
 
 	usr, e := r.svc.GetUserByUserId(int64(userid))

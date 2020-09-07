@@ -4,6 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/go-resty/resty/v2"
 
@@ -51,10 +56,15 @@ func NewService(cfg *config.EnigmaConfig, r RecoveryRepository) RecoveryService 
 	}
 }
 
-func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, apierror.ApiError) {
-	verificationToken, userEmail, err := r.repository.GetEmailByUserId(userId)
+func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+	var verificationToken string
+	var userEmail *domain.UserEmail
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "GetEmailByUserId", ctx, func() {
+		verificationToken, userEmail, err = r.repository.GetEmailByUserId(userId)
+	})
 	if err != nil {
-		// TODO: log this
+		clog.Error("Can't send confirmation email", "send-confirmation-email", err, map[string]string{"auth_id": fmt.Sprintf("%d", userId)})
 		return false, err
 	}
 
@@ -64,50 +74,71 @@ func (r *recoveryService) SendConfirmationEmail(userId int64) (bool, apierror.Ap
 	}
 
 	if userEmail.VerfiedEmail {
-		return false, apierror.New(http.StatusBadRequest, ErrEmailAlreadyVerified, apierror.NewErrorCause(ErrEmailAlreadyVerified, ErrEmailAlreadyVerifiedCode))
+		return false, apierror.NewBadRequestApiError(ErrEmailAlreadyVerified)
 	}
 
 	url := fmt.Sprintf("/confirmemail?email=%s&token=%s", userEmail.Email, verificationToken)
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 
-	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	var response *resty.Response
+	var apierr error
+	performance.TrackTime(time.Now(), "EmailSendAPICall", ctx, func() {
+		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	})
 
 	if apierr != nil {
+		clog.Error("Rest client err", "send-confirmation-email", apierr, map[string]string{"auth_id": fmt.Sprintf("%d", userId)})
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
 	}
 
 	if response.IsError() {
+		clog.Error("Email sender status err", "send-confirmation-email", apierr, map[string]string{"status": response.Status()})
 		return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
 	}
 
 	return true, nil
 }
 
-func (r *recoveryService) ConfirmEmail(email string, token string) (bool, apierror.ApiError) {
+func (r *recoveryService) ConfirmEmail(email string, token string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" || token == "" {
-		return false, apierror.New(http.StatusBadRequest, ErrEmailValidationFailed, apierror.NewErrorCause(ErrEmailValidationFailed, ErrEmailValidationFailedCode))
+		clog.Error("Empty email or token", "confirm-email", errors.New("Empty email or token"), nil)
+		return false, apierror.NewBadRequestApiError(ErrEmailValidationFailed)
 	}
 
-	err := r.repository.ConfirmUserEmail(email, token)
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "ConfirmUserEmail", ctx, func() {
+		err = r.repository.ConfirmUserEmail(email, token)
+	})
+
 	if err != nil {
+		clog.Error("ConfirmUserEmail error", "confirm-email", err, nil)
 		return false, err
 	}
 
 	return true, nil
 }
 
-func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, apierror.ApiError) {
+func (r *recoveryService) ResendEmailConfirmationEmail(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
 
-	userId, err := r.repository.GetuserIdByEmail(email)
+	var userId int64
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "GetuserIdByEmail", ctx, func() {
+		userId, err = r.repository.GetuserIdByEmail(email)
+	})
+
 	if err != nil {
 		return false, err
 	}
 
-	sent, err := r.SendConfirmationEmail(userId)
+	var sent bool
+	performance.TrackTime(time.Now(), "SendConfirmationEmail", ctx, func() {
+		sent, err = r.SendConfirmationEmail(userId, ctx)
+	})
+
 	if err != nil || !sent {
 		return false, err
 	}
@@ -115,19 +146,28 @@ func (r *recoveryService) ResendEmailConfirmationEmail(email string) (bool, apie
 	return sent, nil
 }
 
-func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
+func (r *recoveryService) SendUsername(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
 
-	username, err := r.repository.GetUsernameByEmail(email)
+	var username string
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "GetUsernameByEmail", ctx, func() {
+		username, err = r.repository.GetUsernameByEmail(email)
+	})
+
 	if err != nil {
 		return false, err
 	}
 
 	emailDto := commons.NewDTO([]string{email}, username, defines.ForgotUsername)
 
-	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	var response *resty.Response
+	var apierr error
+	performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
+		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	})
 
 	if apierr != nil {
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
@@ -140,12 +180,17 @@ func (r *recoveryService) SendUsername(email string) (bool, apierror.ApiError) {
 	return true, nil
 }
 
-func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiError) {
+func (r *recoveryService) SendPasswordReset(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
-		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyEmail, apierror.NewErrorCause(domain.ErrEmptyEmail, domain.ErrEmptyEmailCode))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
 
-	securityToken, err := r.repository.GetSecurityToken(email)
+	var securityToken string
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "GetSecurityToken", ctx, func() {
+		securityToken, err = r.repository.GetSecurityToken(email)
+	})
+
 	if err != nil {
 		return false, err
 	}
@@ -154,7 +199,11 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiErr
 
 	emailDto := commons.NewDTO([]string{email}, url, defines.SendPasswordReset)
 
-	response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	var response *resty.Response
+	var apierr error
+	performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
+		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+	})
 
 	if apierr != nil {
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
@@ -167,41 +216,62 @@ func (r *recoveryService) SendPasswordReset(email string) (bool, apierror.ApiErr
 	return true, nil
 }
 
-func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string) (bool, apierror.ApiError) {
+func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" || password == "" || confirmPassword == "" || token == "" {
-		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
+		return false, apierror.NewBadRequestApiError(domain.ErrEmptyField)
 	}
 
 	if password != confirmPassword {
-		return false, apierror.New(http.StatusBadRequest, ErrPasswordConfirmationDoesntMatch, apierror.NewErrorCause(ErrPasswordConfirmationDoesntMatch,
-			ErrPasswordConfirmationDoesntMatchCode))
+		return false, apierror.NewBadRequestApiError(ErrPasswordConfirmationDoesntMatch)
 	}
 
-	securityToken, err := r.repository.GetSecurityToken(email)
+	var securityToken string
+	var err apierror.ApiError
+	performance.TrackTime(time.Now(), "GetSecurityToken", ctx, func() {
+		securityToken, err = r.repository.GetSecurityToken(email)
+	})
+
 	if err != nil {
 		return false, err
 	}
 
 	if token != securityToken {
-		return false, apierror.New(http.StatusBadRequest, ErrPasswordTokenIsNotValid, apierror.NewErrorCause(ErrPasswordTokenIsNotValid, ErrPasswordTokenIsNotValidCode))
+		return false, apierror.NewBadRequestApiError(ErrPasswordTokenIsNotValid)
 	}
 
-	newHashedPassword, e := encryption.GenerateEncodedHash(password, r.cfg)
+	var newHashedPassword string
+	var e error
+	performance.TrackTime(time.Now(), "GenerateEncodedHash", ctx, func() {
+		newHashedPassword, e = encryption.GenerateEncodedHash(password, r.cfg)
+	})
+
 	if e != nil {
 		return false, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(e.Error(), errFailedDecryptionCode))
 	}
 
-	newSecurityToken, errVal := encryption.GenerateSecurityToken(password, r.cfg)
-	if errVal != nil {
-		return false, apierror.NewInternalServerApiError(errVal.Error(), errVal, "security_token_err")
+	var newSecurityToken string
+	performance.TrackTime(time.Now(), "GenerateSecurityToken", ctx, func() {
+		newSecurityToken, e = encryption.GenerateSecurityToken(password, r.cfg)
+	})
+
+	if e != nil {
+		return false, apierror.NewInternalServerApiError(e.Error(), e, "security_token_err")
 	}
 
-	userId, err := r.repository.GetuserIdByEmail(email)
+	var userId int64
+	performance.TrackTime(time.Now(), "GetuserIdByEmail", ctx, func() {
+		userId, err = r.repository.GetuserIdByEmail(email)
+	})
+
 	if err != nil {
 		return false, err
 	}
 
-	updated, err := r.repository.UpdatePasswordHash(userId, newHashedPassword)
+	var updated bool
+	performance.TrackTime(time.Now(), "UpdatePasswordHash", ctx, func() {
+		updated, err = r.repository.UpdatePasswordHash(userId, newHashedPassword)
+	})
+
 	if err != nil {
 		return false, err
 	}
@@ -213,10 +283,13 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 			Template: "passwordresetnotification",
 		}
 
-		response, apierr := resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+		var response *resty.Response
+		performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
+			response, e = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
+		})
 
-		if apierr != nil {
-			return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
+		if e != nil {
+			return false, apierror.NewInternalServerApiError(e.Error(), e, "cannot_email")
 		}
 
 		if response.IsError() {
@@ -224,7 +297,10 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 		}
 	}
 
-	_, err = r.repository.UpdateSecurityToken(userId, newSecurityToken)
+	performance.TrackTime(time.Now(), "UpdateSecurityToken", ctx, func() {
+		_, err = r.repository.UpdateSecurityToken(userId, newSecurityToken)
+	})
+
 	if err != nil {
 		// TODO: LOG THIS
 	}
