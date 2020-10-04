@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -69,7 +70,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 	}
 
 	// If the email or register doesn't exist we should tell the register that an email has been sent IF the email exist. Just to preserve users privacy
-	if verificationToken == "" || userEmail == nil || userEmail == (&domain.UserEmail{}) {
+	if verificationToken == "" || userEmail == nil || reflect.DeepEqual(userEmail, &domain.UserEmail{}) {
 		return true, nil
 	}
 
