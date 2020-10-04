@@ -163,8 +163,9 @@ func (r *recoveryController) GetUserByUserId(c *gin.Context) {
 	id := c.Param("id")
 
 	userid, err := strconv.Atoi(id)
-	if err != nil {
+	if err != nil || id == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
+		return
 	}
 
 	usr, e := r.svc.GetUserByUserId(int64(userid))
