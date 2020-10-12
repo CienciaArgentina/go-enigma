@@ -7,7 +7,7 @@ coverage:
   range: "70...100"
 
 ignore:
-  - "internal/encryption/*"
+  - "internal/encryption/**/*"
   - "internal/login/repository.go"
   - "internal/recovery/repository.go"
   - "internal/register/repository.go"
