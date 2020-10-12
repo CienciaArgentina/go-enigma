@@ -14,6 +14,12 @@ variables:
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
 
+ignore:
+  - "github.com/CienciaArgentina/go-enigma/internal/encryption/*"
+  - "github.com/CienciaArgentina/go-enigma/internal/login/repository.go"
+  - "github.com/CienciaArgentina/go-enigma/internal/recovery/repository.go"
+  - "github.com/CienciaArgentina/go-enigma/internal/register/repository.go"
+
 steps: 
 - task: GoTool@0
   inputs:
