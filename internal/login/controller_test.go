@@ -13,7 +13,6 @@ import (
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
-	domain2 "github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,11 +26,11 @@ type MockService struct {
 	Errors    map[int]apierror.ApiError
 }
 
-func (m *MockService) LoginUser(user *domain2.UserLoginDTO, ctx *rest.ContextInformation) (string, apierror.ApiError) {
+func (m *MockService) LoginUser(user *domain.UserLoginDTO, ctx *rest.ContextInformation) (string, apierror.ApiError) {
 	return m.Responses[LoginUserMockID].(string), m.Errors[LoginUserMockID]
 }
 
-func (m *MockService) UserCanLogin(user *domain2.UserLoginDTO) apierror.ApiError {
+func (m *MockService) UserCanLogin(user *domain.UserLoginDTO) apierror.ApiError {
 	return m.Errors[UserCanLoginMockID]
 }
 
