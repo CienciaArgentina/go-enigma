@@ -52,4 +52,4 @@ steps:
     checkCoverage: true
     coverageFailOption: 'fixed'
     coverageType: 'lines'
-    coverageThreshold: '60'
+    coverageThreshold: '45'
