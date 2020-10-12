@@ -6,6 +6,12 @@ coverage:
   round: down
   range: "70...100"
 
+ignore:
+  - "github.com/CienciaArgentina/go-enigma/internal/encryption/*"
+  - "github.com/CienciaArgentina/go-enigma/internal/login/repository.go"
+  - "github.com/CienciaArgentina/go-enigma/internal/recovery/repository.go"
+  - "github.com/CienciaArgentina/go-enigma/internal/register/repository.go"
+  
 parsers:
   gcov:
     branch_detection:
