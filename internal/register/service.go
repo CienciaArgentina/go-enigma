@@ -184,6 +184,12 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		return 0, apierr
 	}
 
+	apierr = createProfile(userID, usr.Email, usr.Username ,ctx)
+	if apierr != nil {
+		tx.Rollback()
+		return 0, apierr
+	}
+
 	tx.Commit()
 
 	u.recoverySvc.SendConfirmationEmail(userID, ctx)
@@ -288,6 +294,44 @@ func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiErro
 	if err != nil {
 		clog.Error("Rest client error", "set-initial-role", err, nil)
 		return apierror.NewInternalServerApiError(err.Error(), err, "set_initial_role_fail")
+	}
+	if res.IsError() {
+		return apierror.New(res.StatusCode(), res.String(), nil)
+	}
+	return nil
+}
+
+func createProfile(authid int64, email, username string,ctx *rest.ContextInformation) apierror.ApiError {
+	var err error
+	var res *resty.Response
+	baseURL := domain.GetProfileBaseURL()
+	profile := domain.UserProfile{
+		UserID:                 authid,
+		Name:                   "",
+		UserName:               username,
+		LastName:               "",
+		Email:                  email,
+		Identification:         domain.Identification{},
+		SocialNetwork:          nil,
+		Gender:                 domain.Gender{},
+		Address:                domain.Address{},
+		Birthday:               time.Time{},
+		Nationality:            domain.Nationality{},
+		ProfessionalExperience: nil,
+		AcademicFormation:      nil,
+		UserContactPhoneNumber: nil,
+		Locale:                 "",
+		Timezone:               "",
+		Picture:                "",
+		PublicProfile:          nil,
+		UserBlocked:            false,
+	}
+	performance.TrackTime(time.Now(), "CreateUserProfile", ctx, func() {
+		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/")
+	})
+	if err != nil {
+		clog.Error("Rest client error", "create-profile", err, nil)
+		return apierror.NewInternalServerApiError(err.Error(), err, "create-profile-fail")
 	}
 	if res.IsError() {
 		return apierror.New(res.StatusCode(), res.String(), nil)

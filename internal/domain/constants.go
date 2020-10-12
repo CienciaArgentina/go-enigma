@@ -35,3 +35,10 @@ func GetEmailSenderBaseURL() string {
 	}
 	return "http://ca-email-sender-svc"
 }
+
+func GetProfileBaseURL() string {
+	if scope.IsLocal() {
+		return "https://api.cienciaargentina.dev"
+	}
+	return "http://ca-profiles-svc"
+}
