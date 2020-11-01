@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -103,7 +104,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInform
 	}
 
 	if user == nil || userEmail == nil {
-		return "", apierror.NewBadRequestApiError(ErrInvalidLogin)
+		return "", apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
 	}
 
 	var verifyPassword bool
@@ -145,11 +146,11 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInform
 		if err != nil {
 			clog.Error("Can't increment login fail attemp", "login-user", err, map[string]string{"auth_id": fmt.Sprintf("%d", user.AuthId)})
 		}
-		return "", apierror.NewBadRequestApiError(ErrInvalidLogin)
+		return "", apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
 	}
 
 	if l.loginOptions.SignInOptions.RequireConfirmedEmail && !userEmail.VerfiedEmail {
-		return "", apierror.NewBadRequestApiError(ErrEmailNotVerified)
+		return "", apierror.New(http.StatusBadRequest, ErrEmailNotVerified, apierror.NewErrorCause(userEmail.Email, ErrEmailNotVerifiedCode))
 	}
 
 	performance.TrackTime(time.Now(), "ResetLoginFails", ctx, func() {
