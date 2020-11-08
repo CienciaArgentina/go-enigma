@@ -184,7 +184,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		return 0, apierr
 	}
 
-	apierr = createProfile(userID, usr.Email, usr.Username ,ctx)
+	apierr = createProfile(userID, usr.Email, usr.Username, ctx)
 	if apierr != nil {
 		tx.Rollback()
 		return 0, apierr
@@ -288,6 +288,7 @@ func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiErro
 	var res *resty.Response
 	baseURL := domain.GetRolesBaseURL()
 	assign := domain.AssignRoleRequest{AuthID: authid, RoleID: 1}
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "SetInitialRoleAPICall", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetBody(assign).Post("/assign")
 	})
@@ -301,7 +302,7 @@ func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiErro
 	return nil
 }
 
-func createProfile(authid int64, email, username string,ctx *rest.ContextInformation) apierror.ApiError {
+func createProfile(authid int64, email, username string, ctx *rest.ContextInformation) apierror.ApiError {
 	var err error
 	var res *resty.Response
 	baseURL := domain.GetProfileBaseURL()
@@ -326,6 +327,7 @@ func createProfile(authid int64, email, username string,ctx *rest.ContextInforma
 		PublicProfile:          nil,
 		UserBlocked:            false,
 	}
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "CreateUserProfile", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/")
 	})

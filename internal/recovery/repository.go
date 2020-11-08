@@ -39,10 +39,12 @@ type recoveryRepository struct {
 	db *sqlx.DB
 }
 
+// NewRepository Creates new repository with injected DB
 func NewRepository(db *sqlx.DB) RecoveryRepository {
 	return &recoveryRepository{db: db}
 }
 
+// GetEmailByUserId Retrieves user's email based on it's ID
 func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.UserEmail, apierror.ApiError) {
 	var user domain.User
 
@@ -51,11 +53,8 @@ func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.Use
 		if err == sql.ErrNoRows {
 			return "", nil, apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
-		return "", nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
-	}
 
-	if user == (domain.User{}) {
-		return "", nil, apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
+		return "", nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
 	}
 
 	var userEmail domain.UserEmail
@@ -65,13 +64,14 @@ func (r *recoveryRepository) GetEmailByUserId(userId int64) (string, *domain.Use
 		if err == sql.ErrNoRows {
 			return "", nil, apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
+
 		return "", nil, apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
 	}
 
 	return user.VerificationToken, &userEmail, nil
 }
 
-func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierror.ApiError {
+func (r *recoveryRepository) ConfirmUserEmail(email, token string) apierror.ApiError {
 	var userEmail domain.UserEmail
 
 	err := r.db.Get(&userEmail, "SELECT * FROM users_email where email = ?", email)
@@ -80,10 +80,6 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 			return apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
 		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
-	}
-
-	if userEmail == (domain.UserEmail{}) {
-		return apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 	}
 
 	if userEmail.VerfiedEmail {
@@ -98,10 +94,6 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 			return apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 		}
 		return apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserCode))
-	}
-
-	if user == (domain.User{}) {
-		return apierror.New(http.StatusBadRequest, ErrNoUserId, apierror.NewErrorCause(ErrNoUserId, ErrNoUserIdCode))
 	}
 
 	if token != user.VerificationToken {
@@ -120,6 +112,7 @@ func (r *recoveryRepository) ConfirmUserEmail(email string, token string) apierr
 	return nil
 }
 
+// GetuserIdByEmail Returns user's ID from given Email
 func (r *recoveryRepository) GetuserIdByEmail(email string) (int64, apierror.ApiError) {
 	var userId int64
 
@@ -157,6 +150,7 @@ func (r *recoveryRepository) GetUsernameByEmail(email string) (string, apierror.
 	return username, nil
 }
 
+// GetSecurityToken Returns security token for given email
 func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.ApiError) {
 	var userEmail domain.UserEmail
 
@@ -166,10 +160,6 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.Ap
 			return "", apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 		}
 		return "", apierror.New(http.StatusInternalServerError, domain.ErrUnexpectedError, apierror.NewErrorCause(err.Error(), ErrFetchingUserEmailCode))
-	}
-
-	if userEmail == (domain.UserEmail{}) {
-		return "", apierror.New(http.StatusBadRequest, ErrNoUserEmail, apierror.NewErrorCause(ErrNoUserEmail, ErrNoUserEmailCode))
 	}
 
 	if !userEmail.VerfiedEmail {
@@ -189,6 +179,7 @@ func (r *recoveryRepository) GetSecurityToken(email string) (string, apierror.Ap
 	return securityToken, nil
 }
 
+// UpdatePasswordHash Updates users's password
 func (r *recoveryRepository) UpdatePasswordHash(userId int64, passwordHash string) (bool, apierror.ApiError) {
 	if passwordHash == "" {
 		return false, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))
@@ -202,7 +193,7 @@ func (r *recoveryRepository) UpdatePasswordHash(userId int64, passwordHash strin
 	}
 
 	if updatedRows == 0 {
-		return false, apierror.New(http.StatusInternalServerError, ErrUpdatingUser, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
+		return false, apierror.New(http.StatusInternalServerError, ErrUpdatingUser, apierror.NewErrorCause("Error updating password", ErrUpdatingUserCode))
 	}
 
 	return true, nil
@@ -221,12 +212,13 @@ func (r *recoveryRepository) UpdateSecurityToken(userId int64, newSecurityToken 
 	}
 
 	if updatedRows == 0 {
-		return false, apierror.New(http.StatusInternalServerError, ErrUpdatingUser, apierror.NewErrorCause(err.Error(), ErrUpdatingUserCode))
+		return false, apierror.New(http.StatusInternalServerError, ErrUpdatingUser, apierror.NewErrorCause("No rows affected", ErrUpdatingUserCode))
 	}
 
 	return true, nil
 }
 
+// GetUserByUserId Retrieves user with given user ID
 func (r *recoveryRepository) GetUserByUserId(userId int64) (*domain.User, apierror.ApiError) {
 	if userId == 0 {
 		return nil, apierror.New(http.StatusBadRequest, domain.ErrEmptyField, apierror.NewErrorCause(domain.ErrEmptyField, domain.ErrEmptyFieldCode))

@@ -84,6 +84,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 
 	var response *resty.Response
 	var apierr error
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "EmailSendAPICall", ctx, func() {
 		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 	})
@@ -202,6 +203,7 @@ func (r *recoveryService) SendPasswordReset(email string, ctx *rest.ContextInfor
 
 	var response *resty.Response
 	var apierr error
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
 		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 	})
@@ -285,6 +287,7 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 		}
 
 		var response *resty.Response
+		// TODO: Move this to a client
 		performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
 			response, e = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 		})
