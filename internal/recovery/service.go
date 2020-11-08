@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -69,7 +70,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 	}
 
 	// If the email or register doesn't exist we should tell the register that an email has been sent IF the email exist. Just to preserve users privacy
-	if verificationToken == "" || userEmail == nil || userEmail == (&domain.UserEmail{}) {
+	if verificationToken == "" || userEmail == nil || reflect.DeepEqual(userEmail, &domain.UserEmail{}) {
 		return true, nil
 	}
 
@@ -83,6 +84,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 
 	var response *resty.Response
 	var apierr error
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "EmailSendAPICall", ctx, func() {
 		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 	})
@@ -201,6 +203,7 @@ func (r *recoveryService) SendPasswordReset(email string, ctx *rest.ContextInfor
 
 	var response *resty.Response
 	var apierr error
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
 		response, apierr = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 	})
@@ -284,6 +287,7 @@ func (r *recoveryService) ResetPassword(email, password, confirmPassword, token 
 		}
 
 		var response *resty.Response
+		// TODO: Move this to a client
 		performance.TrackTime(time.Now(), "SendEmailAPICall", ctx, func() {
 			response, e = resty.New().SetHostURL(domain.GetEmailSenderBaseURL()).R().SetBody(emailDto).Post("/email")
 		})

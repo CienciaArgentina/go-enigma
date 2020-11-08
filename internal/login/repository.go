@@ -14,10 +14,12 @@ type loginRepository struct {
 	db *sqlx.DB
 }
 
+// NewRepository Returns new login repository
 func NewRepository(db *sqlx.DB) Repository {
 	return &loginRepository{db: db}
 }
 
+// GetUserByUsername Returns user with given username
 func (l *loginRepository) GetUserByUsername(username string) (*domain2.User, *domain2.UserEmail, apierror.ApiError) {
 	var user domain2.User
 
@@ -29,10 +31,6 @@ func (l *loginRepository) GetUserByUsername(username string) (*domain2.User, *do
 		return nil, nil, apierror.New(http.StatusInternalServerError, ErrFailedTryingToLogin, apierror.NewErrorCause(err.Error(), ErrUserFetchFailed))
 	}
 
-	if user == (domain2.User{}) {
-		return nil, nil, apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
-	}
-
 	var userEmail domain2.UserEmail
 
 	err = l.db.Get(&userEmail, "SELECT * FROM users_email WHERE user_id = ?", user.AuthId)
@@ -41,10 +39,6 @@ func (l *loginRepository) GetUserByUsername(username string) (*domain2.User, *do
 			return nil, nil, apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidLogin, ErrInvalidLoginCode))
 		}
 		return nil, nil, apierror.New(http.StatusInternalServerError, ErrFailedTryingToLogin, apierror.NewErrorCause(err.Error(), ErrEmailFetchFailed))
-	}
-
-	if userEmail == (domain2.UserEmail{}) {
-		return nil, nil, apierror.New(http.StatusBadRequest, ErrInvalidLogin, apierror.NewErrorCause(ErrInvalidEmail, ErrInvalidEmailCode))
 	}
 
 	return &user, &userEmail, nil
