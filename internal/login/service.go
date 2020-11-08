@@ -225,6 +225,7 @@ func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, 
 	baseURL := domain.GetRolesBaseURL()
 	authstr := strconv.FormatInt(authid, 10)
 
+	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "GetRoleAPICall", ctx, func() {
 		res, err = resty.New().SetHostURL(baseURL).R().SetPathParams(map[string]string{"auth_id": authstr}).Get("/assign/{auth_id}")
 	})
