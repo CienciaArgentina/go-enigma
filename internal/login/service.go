@@ -219,7 +219,8 @@ func comparePasswordAndHash(password, encodedHash string) (bool, error) {
 }
 
 func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, error) {
-	var role *domain.AssignedRole
+	var roleresp *domain.RoleResponse
+	role := &domain.AssignedRole{}
 	var res *resty.Response
 	var err error
 	baseURL := domain.GetRolesBaseURL()
@@ -237,10 +238,26 @@ func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, 
 		clog.Error("Status error - GetRole", "get-role", errors.New("status error - GetRole"), map[string]string{"status": res.Status()})
 		return nil, errors.New(res.String())
 	}
-	err = json.Unmarshal(res.Body(), &role)
+	err = json.Unmarshal(res.Body(), &roleresp)
 	if err != nil {
 		clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
 		return nil, err
+	}
+
+	role.AuthID = fmt.Sprintf("%d", roleresp.Results[0].AuthID)
+	for _, r := range roleresp.Results[0].Roles {
+		ur := domain.Role{}
+		rbytes, err := json.Marshal(r)
+		if err != nil {
+			clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
+			return nil, err
+		}
+		err = json.Unmarshal(rbytes, &ur)
+		if err != nil {
+			clog.Error("Unmarshal error - GetRole", "get-role", err, nil)
+			return nil, err
+		}
+		role.Roles = append(role.Roles, ur)
 	}
 
 	return role, nil
