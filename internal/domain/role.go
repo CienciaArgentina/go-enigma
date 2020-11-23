@@ -1,5 +1,20 @@
 package domain
 
+type RoleResponse struct {
+	Results []struct {
+		AuthID int `json:"auth_id"`
+		Roles  []struct {
+			ID          int    `json:"id"`
+			Description string `json:"description"`
+			Claims      []struct {
+				ID          int    `json:"id"`
+				Description string `json:"description"`
+			} `json:"claims"`
+		} `json:"roles"`
+	} `json:"results"`
+	Total int `json:"total"`
+}
+
 type AssignedRole struct {
 	AuthID string `json:"auth_id"`
 	Roles  []Role `json:"roles"`
