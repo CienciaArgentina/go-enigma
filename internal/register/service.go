@@ -307,25 +307,9 @@ func createProfile(authid int64, email, username string, ctx *rest.ContextInform
 	var res *resty.Response
 	baseURL := domain.GetProfileBaseURL()
 	profile := domain.UserProfile{
-		UserID:                 authid,
-		Name:                   "",
+		AuthID:                 authid,
 		UserName:               username,
-		LastName:               "",
 		Email:                  email,
-		Identification:         domain.Identification{},
-		SocialNetwork:          nil,
-		Gender:                 domain.Gender{},
-		Address:                domain.Address{},
-		Birthday:               time.Time{},
-		Nationality:            domain.Nationality{},
-		ProfessionalExperience: nil,
-		AcademicFormation:      nil,
-		UserContactPhoneNumber: nil,
-		Locale:                 "",
-		Timezone:               "",
-		Picture:                "",
-		PublicProfile:          nil,
-		UserBlocked:            false,
 	}
 	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "CreateUserProfile", ctx, func() {
