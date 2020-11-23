@@ -40,5 +40,5 @@ func GetProfileBaseURL() string {
 	if scope.IsLocal() {
 		return "https://api.cienciaargentina.dev"
 	}
-	return "http://ca-profiles-svc"
+	return "http://ca-user-profiles-svc"
 }
