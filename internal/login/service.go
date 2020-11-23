@@ -178,7 +178,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInform
 		"auth_id":   user.AuthId,
 		"email":     userEmail.Email,
 		"timestamp": time.Now().Unix(),
-		"role":      string(roleb),
+		"roles":      string(roleb),
 	})
 
 	jwtString, _ := jwt.SignedString([]byte(l.cfg.JwtSign))

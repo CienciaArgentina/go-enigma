@@ -56,7 +56,7 @@ func MapRoutes(r *gin.Engine) {
 	{
 		user.POST("/", registerCtrl.SignUp)
 		user.POST("/login", loginCtrl.Login)
-		user.POST("/confirmpasswordreset", recoveryCtrl.ConfirmPasswordReset)
+		user.POST("/confirm_password_reset", recoveryCtrl.ConfirmPasswordReset)
 		user.GET("/:id", func(c *gin.Context) {
 			GetHandler(c, recoveryCtrl)
 		})
@@ -67,22 +67,22 @@ func MapRoutes(r *gin.Engine) {
 func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	id := c.Param("id")
 
-	if strings.Contains(c.Request.RequestURI, "sendconfirmationemail") {
+	if strings.Contains(c.Request.RequestURI, "send_confirmation_email") {
 		// /users/sendconfirmationemail
 		rc.SendConfirmationEmail(c)
 	} else if _, err := strconv.Atoi(id); err == nil {
 		// /users/1
 		rc.GetUserByUserId(c)
-	} else if strings.Contains(c.Request.RequestURI, "confirmemail") {
+	} else if strings.Contains(c.Request.RequestURI, "confirm_email") {
 		// /users/confirmemail
 		rc.ConfirmEmail(c)
-	} else if strings.Contains(c.Request.RequestURI, "resendconfirmationemail") {
+	} else if strings.Contains(c.Request.RequestURI, "resend_confirmation_email") {
 		// /users/resendconfirmationemail
 		rc.ResendEmailConfirmation(c)
-	} else if strings.Contains(c.Request.RequestURI, "forgotusername") {
+	} else if strings.Contains(c.Request.RequestURI, "forgot_username") {
 		// /users/forgotusername
 		rc.ForgotUsername(c)
-	} else if strings.Contains(c.Request.RequestURI, "sendpasswordreset") {
+	} else if strings.Contains(c.Request.RequestURI, "send_password_reset") {
 		// /users/sendpasswordreset
 		rc.SendPasswordReset(c)
 	}
