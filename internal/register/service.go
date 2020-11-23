@@ -329,7 +329,7 @@ func createProfile(authid int64, email, username string, ctx *rest.ContextInform
 	}
 	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "CreateUserProfile", ctx, func() {
-		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/")
+		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/user_profiles")
 	})
 	if err != nil {
 		clog.Error("Rest client error", "create-profile", err, nil)

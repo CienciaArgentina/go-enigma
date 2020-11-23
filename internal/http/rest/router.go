@@ -20,6 +20,10 @@ import (
 
 func InitRouter() *gin.Engine {
 	router := gin.Default()
+	router.Use(
+		gin.LoggerWithWriter(gin.DefaultWriter, "/ping"),
+		gin.Recovery(),
+	)
 	router.Use(rest.SetContextInformation)
 	MapRoutes(router)
 	return router
