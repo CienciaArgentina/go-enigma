@@ -37,7 +37,7 @@ func (u *registerController) SignUp(c *gin.Context) {
 	})
 
 	if errs != nil {
-		c.JSON(http.StatusBadRequest, errs)
+		c.JSON(errs.Status(), errs)
 		return
 	}
 
