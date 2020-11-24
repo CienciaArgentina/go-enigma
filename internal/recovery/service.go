@@ -65,7 +65,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 		verificationToken, userEmail, err = r.repository.GetEmailByUserId(userId)
 	})
 	if err != nil {
-		clog.Error("Can't send confirmation email", "send-confirmation-email", err, map[string]string{"auth_id": fmt.Sprintf("%d", userId)})
+		clog.Error("Can't send confirmation email", "send-confirmation-email", err, map[string]string{"auth_id": fmt.Sprintf("%d", userId), clog.Subtype: "get-email-by-user-id"})
 		return false, err
 	}
 
@@ -90,12 +90,12 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 	})
 
 	if apierr != nil {
-		clog.Error("Rest client err", "send-confirmation-email", apierr, map[string]string{"auth_id": fmt.Sprintf("%d", userId)})
+		clog.Error("Rest client err", "send-confirmation-email", apierr, map[string]string{"auth_id": fmt.Sprintf("%d", userId), clog.Subtype: "confirm-email-api-call"})
 		return false, apierror.NewInternalServerApiError(apierr.Error(), apierr, "cannot_email")
 	}
 
 	if response.IsError() {
-		clog.Error("Email sender status err", "send-confirmation-email", apierr, map[string]string{"status": response.Status()})
+		clog.Error("Email sender status err", "send-confirmation-email", apierr, map[string]string{"status": response.Status(), clog.Subtype: "confirm-email-api-call", "auth_id": fmt.Sprintf("%d", userId)})
 		return false, apierror.NewInternalServerApiError("cant send email", errors.New("cant send email"), "cannot_email")
 	}
 
@@ -104,7 +104,6 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 
 func (r *recoveryService) ConfirmEmail(email string, token string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" || token == "" {
-		clog.Error("Empty email or token", "confirm-email", errors.New("Empty email or token"), nil)
 		return false, apierror.NewBadRequestApiError(ErrEmailValidationFailed)
 	}
 
@@ -114,7 +113,7 @@ func (r *recoveryService) ConfirmEmail(email string, token string, ctx *rest.Con
 	})
 
 	if err != nil {
-		clog.Error("ConfirmUserEmail error", "confirm-email", err, nil)
+		clog.Error("ConfirmUserEmail error", "confirm-email", err, map[string]string{clog.Subtype: "confirm-user-email", "email": email})
 		return false, err
 	}
 
