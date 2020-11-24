@@ -26,21 +26,14 @@ const (
 
 	// Email verification.
 	ErrEmailAlreadyVerified     = "El mail ya se encuentra confirmado"
-	ErrEmailAlreadyVerifiedCode = "verified_email"
 
-	// Sending email failed.
-	ErrEmailSendingFailed     = "El envío de email falló"
-	ErrEmailSendingFailedCode = "failed_email_send"
 
 	// Empty field.
 	ErrEmailValidationFailed     = "La validación del email falló por algún campo vacío"
-	ErrEmailValidationFailedCode = "empty_field_validating"
 
 	ErrPasswordConfirmationDoesntMatch     = "Los passwords ingresados no son idénticos"
-	ErrPasswordConfirmationDoesntMatchCode = "password_mismatch"
 
 	ErrPasswordTokenIsNotValid     = "El token para resetear la contraseña no es válido"
-	ErrPasswordTokenIsNotValidCode = "invalid_token"
 
 	errFailedDecryptionCode = "failed_decryption"
 )
