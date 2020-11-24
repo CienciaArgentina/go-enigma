@@ -16,7 +16,6 @@ import (
 
 const (
 	ErrMissingUserId     = "No puede faltar el campo de ID"
-	ErrMissingUserIdCode = "missing_user_id"
 )
 
 type recoveryController struct {
