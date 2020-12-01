@@ -184,6 +184,7 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInform
 	jwtString, _ := jwt.SignedString([]byte(l.cfg.JwtSign))
 
 	return jwtString, nil
+
 }
 
 func (l *loginService) UserCanLogin(u *domain.UserLoginDTO) apierror.ApiError {
