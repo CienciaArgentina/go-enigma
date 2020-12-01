@@ -132,6 +132,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		verificationToken, err = encryption.GenerateVerificationToken(usr.Email, u.registerOptions.UserOptions.EmailVerificationExpiryDuration, u.cfg)
 	})
 	if err != nil {
+		clog.Error("Error generating verification token for user", "create-user", err, map[string]string{"email": usr.Email, clog.Subtype: "generate-verification-token"})
 		return 0, apierror.NewInternalServerApiError(errGenerateVerificationToken, err, errTokenGeneration)
 	}
 
@@ -145,6 +146,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		user.SecurityToken.String, err = encryption.GenerateSecurityToken(usr.Password, u.cfg)
 	})
 	if err != nil {
+		clog.Error("Error generating security token for user", "create-user", err, map[string]string{"email": usr.Email, clog.Subtype: "generate-security-token"})
 		return 0, apierror.NewInternalServerApiError(errGenerateSecurityToken, err, errTokenGeneration)
 	}
 
@@ -152,6 +154,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		user.PasswordHash, err = encryption.GenerateEncodedHash(usr.Password, u.cfg)
 	})
 	if err != nil {
+		clog.Error("Error generating encoded hash token for user", "create-user", err, map[string]string{"email": usr.Email, clog.Subtype: "generate-encoded-hash"})
 		return 0, apierror.NewInternalServerApiError(errPasswordHash, err, errPasswordHashCode)
 	}
 
@@ -160,6 +163,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 		userID, err = u.repository.AddUser(tx, user)
 	})
 	if err != nil {
+		clog.Error("Error saving user", "create-user", err, map[string]string{"email": usr.Email, clog.Subtype: "add-user"})
 		return 0, apierror.NewInternalServerApiError(errAddingUser, err, errInvalidRegisterCode)
 	}
 
@@ -175,6 +179,7 @@ func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.Contex
 	})
 	if err != nil {
 		tx.Rollback()
+		clog.Error("Error saving user email", "create-user", err, map[string]string{"email": usr.Email, clog.Subtype: "add-user-email"})
 		return 0, apierror.NewInternalServerApiError(errAddingUserEmail, err, errInvalidRegisterCode)
 	}
 
@@ -297,6 +302,7 @@ func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiErro
 		return apierror.NewInternalServerApiError(err.Error(), err, "set_initial_role_fail")
 	}
 	if res.IsError() {
+		clog.Error(fmt.Sprintf("Error setting initial role - API call. Status code: %d", res.StatusCode()), "set-initial-role", err, nil)
 		return apierror.New(res.StatusCode(), res.String(), nil)
 	}
 	return nil
@@ -307,35 +313,20 @@ func createProfile(authid int64, email, username string, ctx *rest.ContextInform
 	var res *resty.Response
 	baseURL := domain.GetProfileBaseURL()
 	profile := domain.UserProfile{
-		UserID:                 authid,
-		Name:                   "",
+		AuthID:                 authid,
 		UserName:               username,
-		LastName:               "",
 		Email:                  email,
-		Identification:         domain.Identification{},
-		SocialNetwork:          nil,
-		Gender:                 domain.Gender{},
-		Address:                domain.Address{},
-		Birthday:               time.Time{},
-		Nationality:            domain.Nationality{},
-		ProfessionalExperience: nil,
-		AcademicFormation:      nil,
-		UserContactPhoneNumber: nil,
-		Locale:                 "",
-		Timezone:               "",
-		Picture:                "",
-		PublicProfile:          nil,
-		UserBlocked:            false,
 	}
 	// TODO: Move this to a client
 	performance.TrackTime(time.Now(), "CreateUserProfile", ctx, func() {
-		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/")
+		res, err = resty.New().SetHostURL(baseURL).R().SetBody(profile).Post("/user_profiles")
 	})
 	if err != nil {
 		clog.Error("Rest client error", "create-profile", err, nil)
 		return apierror.NewInternalServerApiError(err.Error(), err, "create-profile-fail")
 	}
 	if res.IsError() {
+		clog.Error(fmt.Sprintf("Error setting initial role - API call. Status code: %d", res.StatusCode()), "set-initial-role", err, nil)
 		return apierror.New(res.StatusCode(), res.String(), nil)
 	}
 	return nil
