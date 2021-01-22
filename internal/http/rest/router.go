@@ -1,12 +1,11 @@
 package rest
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	config2 "github.com/CienciaArgentina/go-backend-commons/config"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
@@ -24,7 +23,7 @@ func InitRouter() *gin.Engine {
 		gin.LoggerWithWriter(gin.DefaultWriter, "/ping"),
 		gin.Recovery(),
 	)
-	router.Use(rest.SetContextInformation)
+	router.Use(middleware.SetContextInformation)
 	MapRoutes(router)
 	return router
 }

@@ -1,10 +1,9 @@
 package login
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"time"
-
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
@@ -22,7 +21,7 @@ func NewController(s Service) Controller {
 
 func (l *loginController) Login(c *gin.Context) {
 	var usr domain.UserLoginDTO
-	ctx := rest.GetContextInformation("login", c)
+	ctx := middleware.GetContextInformation("login", c)
 
 	if err := c.ShouldBindJSON(&usr); err != nil {
 		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrInvalidBody, apierror.NewErrorCause(domain.ErrInvalidBody, domain.ErrInvalidBodyCode)))

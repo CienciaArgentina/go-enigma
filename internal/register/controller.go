@@ -1,12 +1,11 @@
 package register
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"time"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
-
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
@@ -24,7 +23,7 @@ func NewController(s RegisterService) RegisterController {
 func (u *registerController) SignUp(c *gin.Context) {
 	var usr domain.UserSignupDTO
 	var errs apierror.ApiError
-	ctx := rest.GetContextInformation("SignUp", c)
+	ctx := middleware.GetContextInformation("SignUp", c)
 
 	if err := c.ShouldBindJSON(&usr); err != nil {
 		c.JSON(http.StatusBadRequest, apierror.New(http.StatusBadRequest, domain.ErrInvalidBody, apierror.NewErrorCause(domain.ErrInvalidBody, domain.ErrInvalidBodyCode)))

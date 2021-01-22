@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/CienciaArgentina/go-enigma/internal/recovery"
-
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 
@@ -112,7 +111,7 @@ func initRegisterOptions() *config.RegisterOptions {
 	return o
 }
 
-func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *rest.ContextInformation) (int64, apierror.ApiError) {
+func (u *registerService) CreateUser(usr *domain.UserSignupDTO, ctx *middleware.ContextInformation) (int64, apierror.ApiError) {
 	var err error
 	var apierr apierror.ApiError
 	var cansignup bool
@@ -288,7 +287,7 @@ func (u *registerService) UserCanSignUp(usr *domain.UserSignupDTO) (bool, apierr
 	return true, nil
 }
 
-func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiError {
+func setInitialRole(authid int64, ctx *middleware.ContextInformation) apierror.ApiError {
 	var err error
 	var res *resty.Response
 	baseURL := domain.GetRolesBaseURL()
@@ -308,7 +307,7 @@ func setInitialRole(authid int64, ctx *rest.ContextInformation) apierror.ApiErro
 	return nil
 }
 
-func createProfile(authid int64, email, username string, ctx *rest.ContextInformation) apierror.ApiError {
+func createProfile(authid int64, email, username string, ctx *middleware.ContextInformation) apierror.ApiError {
 	var err error
 	var res *resty.Response
 	baseURL := domain.GetProfileBaseURL()

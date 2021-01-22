@@ -1,9 +1,8 @@
 package login
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"time"
-
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
 	domain2 "github.com/CienciaArgentina/go-enigma/internal/domain"
@@ -19,7 +18,7 @@ type Repository interface {
 }
 
 type Service interface {
-	LoginUser(user *domain2.UserLoginDTO, ctx *rest.ContextInformation) (string, apierror.ApiError)
+	LoginUser(user *domain2.UserLoginDTO, ctx *middleware.ContextInformation) (string, apierror.ApiError)
 	UserCanLogin(user *domain2.UserLoginDTO) apierror.ApiError
 }
 

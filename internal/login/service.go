@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 
@@ -81,7 +80,7 @@ func setLoginOptions() *config.LoginOptions {
 	return &o
 }
 
-func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *rest.ContextInformation) (string, apierror.ApiError) { // nolint
+func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *middleware.ContextInformation) (string, apierror.ApiError) { // nolint
 	var err error
 	var apierr apierror.ApiError
 	var user *domain.User
@@ -219,7 +218,7 @@ func comparePasswordAndHash(password, encodedHash string) (bool, error) {
 	return false, nil
 }
 
-func getRole(authid int64, ctx *rest.ContextInformation) (*domain.AssignedRole, error) {
+func getRole(authid int64, ctx *middleware.ContextInformation) (*domain.AssignedRole, error) {
 	var roleresp *domain.RoleResponse
 	role := &domain.AssignedRole{}
 	var res *resty.Response

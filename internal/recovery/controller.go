@@ -1,15 +1,14 @@
 package recovery
 
 import (
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
-
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
 	"github.com/CienciaArgentina/go-enigma/internal/domain"
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +26,7 @@ func NewController(s RecoveryService) RecoveryController {
 }
 
 func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
-	ctx := rest.GetContextInformation("SendConfirmationEmail", c)
+	ctx := middleware.GetContextInformation("SendConfirmationEmail", c)
 	userIdParam := c.Param("id")
 	if userIdParam == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(ErrMissingUserId))
@@ -51,7 +50,7 @@ func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
 }
 
 func (r *recoveryController) ConfirmEmail(c *gin.Context) {
-	ctx := rest.GetContextInformation("ConfirmEmail", c)
+	ctx := middleware.GetContextInformation("ConfirmEmail", c)
 	email := c.Query("email")
 	token := c.Query("token")
 	if email == "" || token == "" {
@@ -72,7 +71,7 @@ func (r *recoveryController) ConfirmEmail(c *gin.Context) {
 }
 
 func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
-	ctx := rest.GetContextInformation("ResendEmailConfirmation", c)
+	ctx := middleware.GetContextInformation("ResendEmailConfirmation", c)
 	email := c.Query("email")
 	if email == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
@@ -93,7 +92,7 @@ func (r *recoveryController) ResendEmailConfirmation(c *gin.Context) {
 }
 
 func (r *recoveryController) ForgotUsername(c *gin.Context) {
-	ctx := rest.GetContextInformation("ForgotUsername", c)
+	ctx := middleware.GetContextInformation("ForgotUsername", c)
 	email := c.Query("email")
 	if email == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
@@ -113,7 +112,7 @@ func (r *recoveryController) ForgotUsername(c *gin.Context) {
 }
 
 func (r *recoveryController) SendPasswordReset(c *gin.Context) {
-	ctx := rest.GetContextInformation("ForgotUsername", c)
+	ctx := middleware.GetContextInformation("ForgotUsername", c)
 	email := c.Query("email")
 	if email == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(domain.ErrEmptyField))
@@ -134,7 +133,7 @@ func (r *recoveryController) SendPasswordReset(c *gin.Context) {
 }
 
 func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
-	ctx := rest.GetContextInformation("ConfirmPasswordReset", c)
+	ctx := middleware.GetContextInformation("ConfirmPasswordReset", c)
 	var dto domain.PasswordResetDto
 
 	if err := c.ShouldBindJSON(&dto); err != nil {

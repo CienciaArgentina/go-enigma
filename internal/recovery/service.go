@@ -3,14 +3,13 @@ package recovery
 import (
 	"errors"
 	"fmt"
+	"github.com/CienciaArgentina/go-backend-commons/pkg/middleware"
 	"net/http"
 	"reflect"
 	"time"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/clog"
 	"github.com/CienciaArgentina/go-backend-commons/pkg/performance"
-	"github.com/CienciaArgentina/go-backend-commons/pkg/rest"
-
 	"github.com/go-resty/resty/v2"
 
 	"github.com/CienciaArgentina/go-backend-commons/pkg/apierror"
@@ -50,7 +49,7 @@ func NewService(cfg *config.EnigmaConfig, r RecoveryRepository) RecoveryService 
 	}
 }
 
-func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	var verificationToken string
 	var userEmail *domain.UserEmail
 	var err apierror.ApiError
@@ -95,7 +94,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *rest.ContextI
 	return true, nil
 }
 
-func (r *recoveryService) ConfirmEmail(email string, token string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) ConfirmEmail(email string, token string, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" || token == "" {
 		return false, apierror.NewBadRequestApiError(ErrEmailValidationFailed)
 	}
@@ -113,7 +112,7 @@ func (r *recoveryService) ConfirmEmail(email string, token string, ctx *rest.Con
 	return true, nil
 }
 
-func (r *recoveryService) ResendEmailConfirmationEmail(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) ResendEmailConfirmationEmail(email string, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
 		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
@@ -140,7 +139,7 @@ func (r *recoveryService) ResendEmailConfirmationEmail(email string, ctx *rest.C
 	return sent, nil
 }
 
-func (r *recoveryService) SendUsername(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) SendUsername(email string, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
 		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
@@ -174,7 +173,7 @@ func (r *recoveryService) SendUsername(email string, ctx *rest.ContextInformatio
 	return true, nil
 }
 
-func (r *recoveryService) SendPasswordReset(email string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) SendPasswordReset(email string, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" {
 		return false, apierror.NewBadRequestApiError(domain.ErrEmptyEmail)
 	}
@@ -211,7 +210,7 @@ func (r *recoveryService) SendPasswordReset(email string, ctx *rest.ContextInfor
 	return true, nil
 }
 
-func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string, ctx *rest.ContextInformation) (bool, apierror.ApiError) {
+func (r *recoveryService) ResetPassword(email, password, confirmPassword, token string, ctx *middleware.ContextInformation) (bool, apierror.ApiError) {
 	if email == "" || password == "" || confirmPassword == "" || token == "" {
 		return false, apierror.NewBadRequestApiError(domain.ErrEmptyField)
 	}
