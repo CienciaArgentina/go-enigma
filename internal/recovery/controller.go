@@ -27,7 +27,7 @@ func NewController(s RecoveryService) RecoveryController {
 
 func (r *recoveryController) SendConfirmationEmail(c *gin.Context) {
 	ctx := middleware.GetContextInformation("SendConfirmationEmail", c)
-	userIdParam := c.Param("id")
+	userIdParam := c.Param("secondpath")
 	if userIdParam == "" {
 		c.JSON(http.StatusBadRequest, apierror.NewBadRequestApiError(ErrMissingUserId))
 		return
@@ -158,7 +158,7 @@ func (r *recoveryController) ConfirmPasswordReset(c *gin.Context) {
 }
 
 func (r *recoveryController) GetUserByUserId(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("firstpath")
 
 	userid, err := strconv.Atoi(id)
 	if err != nil || id == "" {

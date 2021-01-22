@@ -70,7 +70,7 @@ func (r *recoveryService) SendConfirmationEmail(userId int64, ctx *middleware.Co
 		return false, apierror.NewBadRequestApiError(ErrEmailAlreadyVerified)
 	}
 
-	url := fmt.Sprintf("/confirmemail?email=%s&token=%s", userEmail.Email, verificationToken)
+	url := fmt.Sprintf("/confirm_email?email=%s&token=%s", userEmail.Email, verificationToken)
 
 	emailDto := commons.NewDTO([]string{userEmail.Email}, url, defines.ConfirmEmail)
 

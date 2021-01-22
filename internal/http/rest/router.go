@@ -60,20 +60,20 @@ func MapRoutes(r *gin.Engine) {
 		user.POST("/", registerCtrl.SignUp)
 		user.POST("/login", loginCtrl.Login)
 		user.POST("/confirm_password_reset", recoveryCtrl.ConfirmPasswordReset)
-		user.GET("/:id", func(c *gin.Context) {
-			GetHandler(c, recoveryCtrl)
+		user.GET("/:firstpath", func(c *gin.Context) {
+			GetSingleHandler(c, recoveryCtrl)
+		})
+		user.GET("/:firstpath/:secondpath", func(c *gin.Context) {
+			GetSecondHandler(c, recoveryCtrl)
 		})
 	}
 }
 
 // I have to do this just because gin router can't handle REST standards.
-func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
-	id := c.Param("id")
+func GetSingleHandler(c *gin.Context, rc recovery.RecoveryController) {
+	id := c.Param("firstpath")
 
-	if strings.Contains(c.Request.RequestURI, "send_confirmation_email") {
-		// /users/sendconfirmationemail
-		rc.SendConfirmationEmail(c)
-	} else if _, err := strconv.Atoi(id); err == nil {
+	if _, err := strconv.Atoi(id); err == nil {
 		// /users/1
 		rc.GetUserByUserId(c)
 	} else if strings.Contains(c.Request.RequestURI, "confirm_email") {
@@ -88,6 +88,16 @@ func GetHandler(c *gin.Context, rc recovery.RecoveryController) {
 	} else if strings.Contains(c.Request.RequestURI, "send_password_reset") {
 		// /users/sendpasswordreset
 		rc.SendPasswordReset(c)
+	}
+}
+
+func GetSecondHandler(c *gin.Context, rc recovery.RecoveryController) {
+	//first := c.Param("firstpath")
+	// second := c.Param("secondpath")
+
+	if strings.Contains(c.Request.RequestURI, "send_confirmation_email") {
+		// /users/sendconfirmationemail
+		rc.SendConfirmationEmail(c)
 	}
 }
 
