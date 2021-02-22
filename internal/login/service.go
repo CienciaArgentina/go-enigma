@@ -149,7 +149,9 @@ func (l *loginService) LoginUser(u *domain.UserLoginDTO, ctx *middleware.Context
 	}
 
 	if l.loginOptions.SignInOptions.RequireConfirmedEmail && !userEmail.VerfiedEmail {
-		return "", apierror.New(http.StatusBadRequest, ErrEmailNotVerified, apierror.NewErrorCause(userEmail.Email, ErrEmailNotVerifiedCode))
+		apierr := apierror.New(http.StatusBadRequest, ErrEmailNotVerified, apierror.NewErrorCause(userEmail.Email, ErrEmailNotVerifiedCode))
+		apierr.AddError(strconv.FormatInt(user.AuthId, 10), ErrEmailNotVerifiedCode)
+		return "", apierr
 	}
 
 	performance.TrackTime(time.Now(), "ResetLoginFails", ctx, func() {
